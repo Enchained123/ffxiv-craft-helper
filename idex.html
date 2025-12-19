@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>FFXIV Production Dashboard</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1967d2;
+            --bg-body: #f8f9fa;
+            --surface: #ffffff;
+            --border: #dadce0;
+            --text-main: #202124;
+            --text-sub: #5f6368;
+            --hover: #f1f3f4;
+            --success: #188038;
+            --currency-bg: #f3e8fd; /* 货币标签背景色 */
+            --currency-text: #8430ce; /* 货币文字颜色 */
+            --header-h: 64px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Google Sans', 'Segoe UI', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- 左侧边栏 --- */
+        aside {
+            width: 320px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            box-shadow: 4px 0 16px rgba(0,0,0,0.02);
+        }
+
+        .brand {
+            height: var(--header-h);
+            display: flex; align-items: center; padding: 0 24px;
+            font-size: 20px; font-weight: 500; color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+        }
+        .brand span { color: var(--primary); margin-right: 12px; font-size: 24px; }
+
+        .search-area { padding: 20px; position: relative; }
+        .input-group {
+            background: var(--bg-body);
+            border-radius: 8px;
+            display: flex; align-items: center;
+            padding: 10px 16px;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+        .input-group:focus-within { background: white; border-color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .input-group input {
+            border: none; background: transparent; outline: none;
+            width: 100%; margin-left: 10px; font-size: 15px; color: var(--text-main);
+        }
+
+        .dropdown {
+            position: absolute; top: 75px; left: 20px; width: 280px;
+            background: white; border: 1px solid var(--border);
+            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 300px; overflow-y: auto; display: none; z-index: 100;
+        }
+        .dropdown-item { padding: 12px 16px; cursor: pointer; font-size: 14px; }
+        .dropdown-item:hover { background: var(--hover); color: var(--primary); }
+
+        .cart-list { flex: 1; overflow-y: auto; padding: 0 20px 20px; }
+        .cart-item {
+            background: white; border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s;
+        }
+        .cart-item:hover { border-color: #b0c4de; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .cart-name { font-size: 14px; font-weight: 500; line-height: 1.4; flex: 1; padding-right: 10px; }
+        
+        .counter { display: flex; align-items: center; gap: 8px; }
+        .btn-mini {
+            width: 24px; height: 24px; border-radius: 4px;
+            background: var(--hover); color: var(--text-sub);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px; transition: 0.2s;
+        }
+        .btn-mini:hover { background: var(--primary); color: white; }
+        .qty-num { font-size: 14px; font-weight: 600; min-width: 20px; text-align: center; }
+
+        .sidebar-footer {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .footer-label {
+            font-size: 12px; font-weight: 600; color: var(--text-sub);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .set-control-group { display: flex; gap: 8px; }
+        .set-select {
+            flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
+            font-size: 13px; color: var(--text-main); outline: none; background: white; cursor: pointer;
+        }
+        .btn-add-set {
+            width: 36px; height: 36px; background: var(--primary); color: white;
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-add-set:hover { background: #185abc; }
+        optgroup { font-weight: 600; color: var(--primary); }
+
+        /* --- 右侧主区域 --- */
+        main {
+            flex: 1; display: flex; flex-direction: column; min-width: 0;
+        }
+
+        header {
+            height: var(--header-h); background: var(--surface); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
+        }
+        .page-title { font-size: 20px; font-weight: 400; color: var(--text-main); }
+        
+        .toggle-group { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; user-select: none; color: var(--text-sub);}
+        .toggle-switch {
+            width: 40px; height: 22px; background: #dadce0; border-radius: 11px; position: relative; transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content:''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        input:checked + .toggle-switch { background: var(--primary); }
+        input:checked + .toggle-switch::after { transform: translateX(18px); }
+
+        .columns-container {
+            flex: 1; display: flex; padding: 20px 30px; gap: 20px; overflow: hidden; background: var(--bg-body);
+        }
+
+        .col {
+            flex: 1; background: var(--surface); border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; min-width: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .col-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+            font-size: 15px; font-weight: 500; color: var(--text-main);
+            display: flex; align-items: center; gap: 10px;
+            background: white; border-radius: 16px 16px 0 0;
+        }
+        .col-header i { font-size: 20px; color: var(--primary); opacity: 0.8; }
+
+        .col-body { flex: 1; overflow-y: auto; padding: 0; }
+
+        /* 底部货币统计面板 */
+        .currency-footer {
+            padding: 15px 20px; background: #fdfdfd; border-top: 1px solid var(--border);
+            border-radius: 0 0 16px 16px;
+        }
+        .currency-row {
+            display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--currency-text);
+        }
+        .currency-total { font-weight: 700; }
+        .currency-title { font-size: 11px; color: var(--text-sub); text-transform: uppercase; margin-bottom: 5px; font-weight: 600;}
+
+        .row {
+            padding: 12px 20px; border-bottom: 1px solid #f1f3f4;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; cursor: pointer; transition: 0.1s;
+        }
+        .row:hover { background: #f8f9fa; }
+        .r-name { display: flex; flex-direction: column; justify-content: center; flex: 1; }
+        .r-name-main { display: flex; align-items: center; gap: 8px; }
+        
+        .r-qty { font-weight: 600; color: var(--text-main); background: #e8f0fe; color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 13px; }
+        
+        /* 标签样式 */
+        .tag-sub {
+            font-size: 10px; color: #188038; background: #e6f4ea;
+            padding: 1px 5px; border-radius: 4px; border: 1px solid #ceead6;
+        }
+        .tag-currency {
+            font-size: 10px; color: var(--currency-text); background: var(--currency-bg);
+            padding: 1px 6px; border-radius: 4px; margin-top: 3px; display: inline-block; width: fit-content;
+        }
+
+        .done {
+            background: #fcfcfc; color: #dadce0; text-decoration: line-through; order: 999;
+        }
+        .done .r-qty { background: #f1f3f4; color: #bdc1c6; }
+        .done .tag-sub, .done .tag-currency { opacity: 0; }
+        .check-icon { font-size: 18px; color: var(--success); margin-right: 4px; display: none; }
+        .done .check-icon { display: inline-block; opacity: 0.5; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #bdc1c6; }
+    </style>
+</head>
+<body>
+
+<aside>
+    <div class="brand">
+        <span class="material-icons-round">construction</span>
+        Eorzea Craft
+    </div>
+    
+    <div class="search-area">
+        <div class="input-group">
+            <span class="material-icons-round" style="font-size:20px; color:var(--text-sub)">search</span>
+            <input type="text" id="searchInput" placeholder="Search item..." autocomplete="off">
+        </div>
+        <div id="searchDropdown" class="dropdown"></div>
+    </div>
+
+    <div class="cart-list" id="cartList"></div>
+
+    <div class="sidebar-footer">
+        <div class="footer-label">Quick Import</div>
+        <div class="select-group" style="display:flex; flex-direction:column; gap:8px;">
+            <select id="catSelect" class="set-select" onchange="handleCategoryChange()">
+                <option value="">-- Step 1: Category --</option>
+            </select>
+            <div style="display:flex; gap:8px;">
+                <select id="setSelect" class="set-select" disabled>
+                    <option value="">-- Step 2: Set --</option>
+                </select>
+                <div id="btnAddSet" class="btn-add-set" onclick="addSelectedSet()">
+                    <span class="material-icons-round" style="font-size:20px">playlist_add</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="page-title">Project Dashboard</div>
+        <label class="toggle-group">
+            <span>Show Crystals</span>
+            <input type="checkbox" id="crystalToggle" style="display:none" checked>
+            <div class="toggle-switch"></div>
+        </label>
+    </header>
+
+    <div class="columns-container">
+        <div class="col">
+            <div class="col-header">
+                <i class="material-icons-round">looks_one</i>
+                Direct Materials
+            </div>
+            <div id="directList" class="col-body"></div>
+        </div>
+
+        <div class="col">
+            <div class="col-header">
+                <i class="material-icons-round">looks_two</i>
+                Pre-crafts (Sub)
+            </div>
+            <div id="subList" class="col-body"></div>
+        </div>
+
+        <div class="col">
+            <div class="col-header">
+                <i class="material-icons-round">grass</i>
+                Raw Materials
+            </div>
+            <div id="rawList" class="col-body"></div>
+            <!-- 货币统计区 -->
+            <div id="currencyFooter" class="currency-footer" style="display:none">
+                <div class="currency-title">Currency Summary</div>
+                <div id="currencyList"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    let allRecipes = [];
+    let recipeMap = {};
+    let gearSets = [];
+    let currencyMap = {}; // 存储汇率
+    let cart = []; 
+    let checkedItems = new Set();
+    const crystalKeywords = ['之碎晶', '之水晶', '之晶簇', 'Shard', 'Crystal', 'Cluster'];
+
+    // 1. 并行加载所有数据
+    Promise.all([
+        fetch('recipes.json').then(r => r.json()),
+        fetch('gear_sets.json').then(r => r.json()).catch(() => []),
+        fetch('currency.json').then(r => r.json()).catch(() => ({}))
+    ]).then(([recipes, sets, currencies]) => {
+        allRecipes = recipes;
+        gearSets = sets;
+        currencyMap = currencies; // 加载汇率
+        
+        recipes.forEach(r => recipeMap[String(r.result_id)] = r);
+        initCategorySelect();
+        renderCart();
+    });
+
+    // ... (左侧搜索、分类逻辑保持不变，为了节省篇幅省略重复代码，但你需要保留它们) ...
+    // 为了完整性，我还是把关键的 UI 逻辑放这里
+    
+    function initCategorySelect() {
+        const catSelect = document.getElementById('catSelect');
+        catSelect.innerHTML = '<option value="">-- Step 1: Category --</option>';
+        if (!gearSets) return;
+        gearSets.forEach((cat, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.text = cat.category;
+            catSelect.add(opt);
+        });
+    }
+
+    function handleCategoryChange() {
+        const catSelect = document.getElementById('catSelect');
+        const setSelect = document.getElementById('setSelect');
+        const catIndex = catSelect.value;
+        setSelect.innerHTML = '<option value="">-- Step 2: Set --</option>';
+        setSelect.disabled = true;
+        if (catIndex === "") return;
+        const selectedCat = gearSets[catIndex];
+        if (selectedCat && selectedCat.sets) {
+            selectedCat.sets.forEach((set, setIndex) => {
+                const opt = document.createElement('option');
+                opt.value = `${catIndex}-${setIndex}`;
+                opt.text = set.name;
+                setSelect.add(opt);
+            });
+            setSelect.disabled = false;
+        }
+    }
+
+    function addSelectedSet() {
+        const setSelect = document.getElementById('setSelect');
+        const value = setSelect.value;
+        if (!value) return;
+        const [catIdx, setIdx] = value.split('-').map(Number);
+        const set = gearSets[catIdx].sets[setIdx];
+        set.items.forEach(itemName => {
+            const recipe = allRecipes.find(r => r.name === itemName);
+            if (recipe) addToCart(recipe, false);
+        });
+        renderCart();
+        calculateAll();
+    }
+
+    // 搜索逻辑
+    const searchInput = document.getElementById('searchInput');
+    const dropdown = document.getElementById('searchDropdown');
+    const crystalToggle = document.getElementById('crystalToggle');
+
+    searchInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        dropdown.innerHTML = '';
+        if (!val) { dropdown.style.display = 'none'; return; }
+        const matches = allRecipes.filter(r => r.name.includes(val)).slice(0, 8);
+        if (matches.length > 0) {
+            dropdown.style.display = 'block';
+            matches.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.innerText = r.name;
+                div.onclick = () => addToCart(r);
+                dropdown.appendChild(div);
+            });
+        } else { dropdown.style.display = 'none'; }
+    });
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target)) dropdown.style.display = 'none';
+    });
+    crystalToggle.addEventListener('change', calculateAll);
+
+    // 购物车
+    function addToCart(recipe, refresh = true) {
+        dropdown.style.display = 'none';
+        searchInput.value = '';
+        const exist = cart.find(c => c.id === recipe.id);
+        if (exist) { exist.amount++; } else {
+            cart.push({ id: recipe.id, name: recipe.name, amount: 1, result_id: recipe.result_id });
+        }
+        if (refresh) { renderCart(); calculateAll(); }
+    }
+    function changeAmount(index, delta) {
+        cart[index].amount += delta;
+        if (cart[index].amount <= 0) cart.splice(index, 1);
+        renderCart();
+        calculateAll();
+    }
+    function renderCart() {
+        const container = document.getElementById('cartList');
+        if (cart.length === 0) {
+            container.innerHTML = `<div style="text-align:center; margin-top:50px; color:var(--text-sub); font-size:13px; line-height:1.6;">Your project list is empty.<br>Start by searching items above.</div>`;
+            return;
+        }
+        container.innerHTML = '';
+        cart.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div class="cart-name">${item.name}</div>
+                <div class="counter">
+                    <div class="btn-mini" onclick="changeAmount(${index}, -1)">-</div>
+                    <div class="qty-num">${item.amount}</div>
+                    <div class="btn-mini" onclick="changeAmount(${index}, 1)">+</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // --- 核心计算逻辑 (带汇率) ---
+    function calculateAll() {
+        const totalDirect = {};
+        const totalSub = {};
+        const totalRaw = {};
+        const totalCurrency = {}; // 货币汇总
+        const showCrystals = crystalToggle.checked;
+
+        cart.forEach(cartItem => {
+            const recipe = recipeMap[String(cartItem.result_id)];
+            if (!recipe) return;
+            const craftTimes = Math.ceil(cartItem.amount / recipe.amount);
+
+            recipe.ingredients.forEach(ing => {
+                if (!showCrystals && isCrystal(ing.name)) return;
+                const need = ing.amount * craftTimes;
+                
+                const isSub = !!recipeMap[String(ing.id)];
+                const key = ing.name + (isSub ? "|SUB" : "");
+                totalDirect[key] = (totalDirect[key] || 0) + need;
+
+                // 递归计算
+                solveRecursive(ing.id, need, totalSub, totalRaw, ing.name, showCrystals);
+            });
+        });
+
+        // 遍历 Raw List 计算货币
+        // 注意：solveRecursive 里只是把名字加进去了。现在我们要算钱。
+        for (let rawName in totalRaw) {
+            const amount = totalRaw[rawName];
+            // 检查 currencyMap 是否有这个材料
+            if (currencyMap[rawName]) {
+                const info = currencyMap[rawName];
+                const cost = info.price * amount;
+                // 累加到货币总表
+                totalCurrency[info.name] = (totalCurrency[info.name] || 0) + cost;
+            }
+        }
+
+        renderList('directList', totalDirect, true);
+        renderList('subList', totalSub);
+        // 渲染 Raw List 时传入货币信息，用于显示单行标签
+        renderList('rawList', totalRaw, false, currencyMap);
+        
+        // 渲染底部总计
+        renderCurrencyFooter(totalCurrency);
+    }
+
+    function solveRecursive(itemId, needAmount, subMap, rawMap, itemName, showCrystals) {
+        if (!showCrystals && isCrystal(itemName)) return;
+        const recipe = recipeMap[String(itemId)];
+        if (recipe) {
+            subMap[recipe.name] = (subMap[recipe.name] || 0) + needAmount;
+            const craftTimes = Math.ceil(needAmount / recipe.amount);
+            recipe.ingredients.forEach(ing => {
+                solveRecursive(ing.id, ing.amount * craftTimes, subMap, rawMap, ing.name, showCrystals);
+            });
+        } else {
+            if (itemName) rawMap[itemName] = (rawMap[itemName] || 0) + needAmount;
+        }
+    }
+
+    function isCrystal(name) {
+        return crystalKeywords.some(keyword => name.includes(keyword));
+    }
+
+    function renderList(elementId, dataMap, checkSub = false, curMap = null) {
+        const container = document.getElementById(elementId);
+        container.innerHTML = '';
+        const items = Object.keys(dataMap).map(key => {
+            let name = key;
+            let isSub = false;
+            if (checkSub && key.includes("|SUB")) { name = key.split("|")[0]; isSub = true; }
+            return { name, amount: dataMap[key], isSub };
+        });
+
+        if (items.length === 0) {
+            container.innerHTML = `<div style="padding:20px; text-align:center; color:#ccc; font-size:12px;">--</div>`;
+            return;
+        }
+
+        items.sort((a, b) => {
+            const checkedA = checkedItems.has(a.name);
+            const checkedB = checkedItems.has(b.name);
+            return checkedA - checkedB;
+        });
+
+        items.forEach(item => {
+            const div = document.createElement('div');
+            const isChecked = checkedItems.has(item.name);
+            div.className = `row ${isChecked ? 'done' : ''}`;
+            
+            // 检查是否有汇率信息
+            let currencyTag = '';
+            if (curMap && curMap[item.name]) {
+                const c = curMap[item.name];
+                currencyTag = `<div class="tag-currency">${c.price} ${c.name}</div>`;
+            }
+
+            div.innerHTML = `
+                <div class="r-name">
+                    <div class="r-name-main">
+                        <span class="material-icons-round check-icon">check_circle</span>
+                        ${item.name}
+                        ${item.isSub ? '<span class="tag-sub">Sub</span>' : ''}
+                    </div>
+                    ${currencyTag}
+                </div>
+                <div class="r-qty">${item.amount}</div>
+            `;
+            div.onclick = () => {
+                if (checkedItems.has(item.name)) checkedItems.delete(item.name);
+                else checkedItems.add(item.name);
+                renderList(elementId, dataMap, checkSub, curMap);
+            };
+            container.appendChild(div);
+        });
+    }
+
+    // 渲染底部货币统计
+    function renderCurrencyFooter(totalCurrency) {
+        const footer = document.getElementById('currencyFooter');
+        const list = document.getElementById('currencyList');
+        
+        // 如果没有货币需求，隐藏面板
+        if (Object.keys(totalCurrency).length === 0) {
+            footer.style.display = 'none';
+            return;
+        }
+
+        footer.style.display = 'block';
+        list.innerHTML = '';
+        
+        for (let name in totalCurrency) {
+            const div = document.createElement('div');
+            div.className = 'currency-row';
+            div.innerHTML = `
+                <span>${name}</span>
+                <span class="currency-total">${totalCurrency[name]}</span>
+            `;
+            list.appendChild(div);
+        }
+    }
+</script>
+</body>
+</html>
