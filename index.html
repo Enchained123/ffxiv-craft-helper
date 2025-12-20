@@ -6,165 +6,176 @@
     <title>FFXIV Craft Helper</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        /* --- 核心变量 (严格保留) --- */
+        /* --- 核心变量 --- */
         :root {
-            --primary: #1a73e8;
-            --bg-body: #f8f9fa; 
-            --surface: #ffffff;
-            --text-dark: #222222;
-            --text-main: #3c4043;
-            --text-sub: #70757a;
-            --text-grey-light: #E0E0E0; 
-            --text-input: #5F6368;      
-            --divider: #f2f2f2; 
-            --radius-large: 32px;
-            --radius-inner: 20px;
-            --border-light: #dadce0;
-            --currency-bg: #f3e8fd;
-            --currency-text: #8430ce;
-            --success: #34a853;
+            --primary: #4A5D6E;
+            --bg-body: #F7F5F0;
+            --surface: #FFFFFF;
+            --text-dark: #2D2D2D;
+            --text-main: #555555;
+            --text-sub: #A5A5A5;
+            --divider: #EAE8E2;
+            --grid-line: rgba(210, 205, 195, 0.4);
+            --shadow-paper: 0 2px 10px rgba(0,0,0,0.03);
         }
 
         * { box-sizing: border-box; }
         body { 
-            font-family: 'Google Sans', 'SF Pro Display', 'Microsoft YaHei', sans-serif; 
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; 
             background-color: var(--bg-body); color: var(--text-main);
-            margin: 0; height: 100vh; display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden; 
+            margin: 0; height: 100vh; display: grid; grid-template-columns: 310px repeat(3, 1fr);
+            overflow: hidden; 
+            /* 纸张网格背景 */
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 25px 25px;
         }
 
         /* --- 侧边栏 --- */
-        aside { padding: 24px 12px 24px 24px; display: flex; flex-direction: column; gap: 16px; height: 100vh; }
-        .brand { padding: 0 8px; font-size: 18px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 10px; }
-        .brand i { color: var(--text-dark); font-size: 24px; }
-        .search-bar-box { border: 1px solid var(--border-light); border-radius: 20px; display: flex; align-items: center; padding: 8px 16px; transition: 0.2s; }
-        .search-bar-box:focus-within { border-color: var(--primary); background: white; }
-        .search-bar-box input { border: none; background: transparent; outline: none; margin-left: 8px; font-size: 14px; width: 100%; }
-
-        .sidebar-card { background: var(--surface); border-radius: var(--radius-large); box-shadow: 0 1px 3px rgba(0,0,0,0.03); flex: 1; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
-        .card-header-label { padding: 24px 24px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 400; color: var(--text-sub); }
-
-        .scroll-list { flex: 1; overflow-y: auto; padding: 0 24px; display: flex; flex-direction: column; }
-        .scroll-list::-webkit-scrollbar { width: 0; }
-
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 0.5px solid var(--divider); font-size: 14px; background: white; }
-        .list-item:last-child { border-bottom: none; }
-        .item-name-sidebar { font-size: 14px; font-weight: 400; color: var(--text-dark); flex: 1; padding-right: 8px; }
-
-        .stepper { display: flex; align-items: center; gap: 6px; background: var(--bg-body); padding: 2px 4px; border-radius: 8px; transform: scale(0.85); transform-origin: right center; }
-        .btn-step { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-sub); cursor: pointer; }
-        .btn-step:hover { background: white; color: var(--text-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .qty-sb { font-size: 12px; font-weight: 700; min-width: 14px; text-align: center; }
-
-        .import-box-inner { background: #f8f9fa; margin: 10px 16px 16px; padding: 16px; border-radius: var(--radius-inner); display: flex; flex-direction: column; gap: 10px; }
-        .inner-select { background: white; border: 1px solid #eee; padding: 8px; border-radius: 10px; font-size: 12px; outline: none; cursor: pointer; color: var(--text-main); }
-        .inner-btn { background: var(--text-dark); color: white; border: none; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-
-        /* --- 右侧布局 --- */
-        .col-wrapper { padding: 24px 24px 24px 12px; display: flex; flex-direction: column; gap: 24px; height: 100vh; overflow-y: auto; visibility: hidden; opacity: 0; transition: opacity 0.3s; }
-        .col-wrapper.active { visibility: visible; opacity: 1; }
-        .col-fixed { height: 100vh; overflow: hidden; }
-        .big-card { background: var(--surface); border-radius: var(--radius-large); box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.05); width: 100%; }
-        .full-height { flex: 1; overflow: hidden; }
-
-        /* --- 极简数字输入逻辑 (优化版) --- */
-        .qty-group { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 80px; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-
-        .minimal-input { 
-            width: 45px; border: none; background: transparent; 
-            text-align: right; font-size: 14px; font-weight: 600; 
-            outline: none; padding: 4px 6px; border-radius: 6px; 
-            transition: color 0.1s, background 0.2s;
+        aside { 
+            padding: 24px; display: flex; flex-direction: column; gap: 20px; 
+            height: 100vh; border-right: 1px solid var(--divider); background: #F2F0E9;
         }
-        .minimal-input:hover, .minimal-input:focus { background: #f0f0f0; }
+        .brand { font-size: 15px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid var(--text-dark); padding-bottom: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         
-        .val-empty { color: var(--text-grey-light); } /* 0色 */
-        .val-filled { color: var(--text-input); }      /* 输入后色 */
+        .search-bar-box { background: var(--surface); border: 1px solid #D1CFCA; display: flex; align-items: center; padding: 8px 12px; position: relative; }
+        .search-bar-box input { border: none; background: transparent; outline: none; font-size: 13px; width: 100%; }
         
-        .slash { color: var(--text-grey-light); font-size: 12px; margin: 0 2px; }
-        .target-qty-right { font-weight: 600; color: var(--text-sub); min-width: 25px; text-align: right; font-size: 14px; }
+        .dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #D1CFCA; z-index: 200; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .dropdown-item { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--divider); }
+        .dropdown-item:hover { background: #F9F8F5; }
 
+        .sidebar-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #D1CFCA; background: var(--surface); box-shadow: var(--shadow-paper); }
+        .card-header-label { padding: 12px 15px; font-size: 12px; font-weight: bold; color: var(--text-dark); background: #FAF9F6; border-bottom: 1px solid var(--divider); display: flex; justify-content: space-between; align-items: center; }
+
+        .scroll-list { flex: 1; overflow-y: auto; padding: 0 15px; }
+        
+        /* --- 列表项交互 --- */
+        .list-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px solid var(--divider); 
+            font-size: 13px; transition: opacity 0.2s, background 0.2s;
+            background: white; user-select: none;
+        }
+        .list-item:hover { background: #FCFBFA; }
+        .list-item:active { transform: scale(0.995); }
+
+        .checkbox-wrapper { margin-right: 12px; display: flex; align-items: center; cursor: pointer; padding: 2px; }
+        .custom-checkbox {
+            width: 18px; height: 18px; border: 1.5px solid #D1CFCA; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; background: white;
+            transition: all 0.2s;
+        }
+        .custom-checkbox i { font-size: 15px; color: white; display: none; }
+        
+        .item-name-text { flex: 1; padding-right: 8px; cursor: pointer; line-height: 1.4; }
+        
         /* 状态样式 */
-        .is-ready { font-weight: 500 !important; color: var(--text-dark) !important; }
-        .is-done { opacity: 0.3 !important; text-decoration: line-through !important; order: 999 !important; background: transparent !important; }
+        .is-done { opacity: 0.3; }
+        .is-done .item-name-text { text-decoration: line-through; }
+        .is-done .custom-checkbox { background: var(--primary); border-color: var(--primary); }
+        .is-done .custom-checkbox i { display: block; }
         .is-done .minimal-input { visibility: hidden; }
 
-        /* 货币与开关 */
-        .tag-currency { font-size: 10px; color: var(--currency-text); background: var(--currency-bg); padding: 1px 6px; border-radius: 4px; margin-top: 3px; display: inline-block; width: fit-content; }
-        .currency-footer { padding: 15px 24px; background: #fdfdfd; border-top: 1px solid var(--divider); border-radius: 0 0 32px 32px; }
-        .currency-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--currency-text); }
-        .mini-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-sub); cursor: pointer; }
-        .mini-toggle input { display: none; }
-        .toggle-rail { width: 28px; height: 16px; background: #eee; border-radius: 10px; position: relative; transition: 0.3s; }
-        .toggle-rail::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: white; border-radius: 50%; transition: 0.3s; }
-        input:checked + .toggle-rail { background: var(--text-dark); }
-        input:checked + .toggle-rail::after { transform: translateX(12px); }
+        /* 快速导入 */
+        .import-box-inner { padding: 15px; border-top: 1px solid var(--divider); display: flex; flex-direction: column; gap: 8px; background: #FAF9F6; }
+        .inner-select { border: 1px solid #D1CFCA; padding: 6px; font-size: 12px; outline: none; width: 100%; }
+        .inner-btn { background: #4A4A4A; color: #fff; border: none; padding: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 2px; }
 
-        .dropdown { position: absolute; top: 120px; left: 24px; right: 24px; background: white; border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; display: none; z-index: 100; }
-        .dropdown-item { padding: 12px 16px; cursor: pointer; font-size: 13px; }
-        .dropdown-item:hover { background: var(--bg-body); color: var(--primary); }
+        /* 右侧布局 */
+        .col-wrapper { padding: 20px 10px; display: flex; flex-direction: column; height: 100vh; position: relative; visibility: hidden; opacity: 0; transition: 0.3s; }
+        .col-wrapper.active { visibility: visible; opacity: 1; }
+        
+        .big-card { background: var(--surface); border: 1px solid #D1CFCA; display: flex; flex-direction: column; flex: 1; box-shadow: var(--shadow-paper); position: relative; overflow: hidden; }
+        /* 左侧模拟装订孔效果 */
+        .big-card::after { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background-image: radial-gradient(#EAE8E2 1.5px, transparent 1.5px); background-size: 4px 20px; }
+
+        .section-title { font-size: 10px; font-weight: 700; padding: 6px 15px; border-bottom: 1px solid var(--divider); color: var(--text-sub); background: #FDFDFB; text-transform: uppercase; }
+        
+        .qty-group { display: flex; align-items: center; gap: 4px; }
+        .minimal-input { width: 40px; border: none; text-align: right; font-size: 13px; font-weight: 600; outline: none; background: #F9F8F5; border-radius: 4px; padding: 2px; }
+        .target-qty-right { font-weight: 700; min-width: 25px; text-align: right; color: var(--text-dark); }
+        
+        .crystal-card { flex: 0 0 auto; height: 35%; margin-top: 15px; }
+        .tag-currency { font-size: 9px; color: #8430ce; background: #f3e8fd; padding: 1px 4px; border-radius: 3px; margin-top: 2px; display: inline-block; }
+        .currency-footer { padding: 12px 15px; background: #FAF9F6; border-top: 1px solid var(--divider); font-size: 12px; }
+
+        .mini-toggle { display: flex; align-items: center; gap: 6px; font-size: 10px; cursor: pointer; }
+        .mini-toggle input { display: none; }
+        .toggle-rail { width: 24px; height: 14px; background: #D1CFCA; border-radius: 7px; position: relative; }
+        .toggle-rail::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; background: white; border-radius: 50%; transition: 0.2s; }
+        input:checked + .toggle-rail { background: var(--primary); }
+        input:checked + .toggle-rail::after { transform: translateX(10px); }
 
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: #E0DDD5; }
     </style>
 </head>
 <body>
 
 <aside>
-    <div class="brand"><i class="material-icons-round">auto_awesome</i><span>FFXIV Craft Helper</span></div>
+    <div class="brand"><i class="material-icons-round" style="font-size:18px;">auto_awesome</i><span>FFXIV Craft Helper</span></div>
+    
     <div class="search-bar-box">
-        <i class="material-icons-round" style="color:#999; font-size: 18px;">search</i>
+        <i class="material-icons-round" style="font-size: 16px; color:var(--text-sub);">search</i>
         <input type="text" id="searchInput" placeholder="搜索配方..." autocomplete="off">
         <div id="searchDropdown" class="dropdown"></div>
     </div>
+
     <div class="sidebar-card">
         <div class="card-header-label">
             <span>当前计划</span>
-            <span style="color:var(--text-dark); cursor:pointer; font-weight:500;" onclick="clearCart()">清空</span>
+            <span style="cursor:pointer; font-weight: normal; font-size:10px; text-decoration: underline;" onclick="clearCart()">RESET</span>
         </div>
         <div class="scroll-list" id="cartList"></div>
+        
         <div class="import-box-inner">
-            <div style="font-size:11px; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">快速导入套装</div>
-            <select id="catSelect" class="inner-select" onchange="handleCategoryChange()"><option value="">-- 分类 --</option></select>
-            <select id="setSelect" class="inner-select" disabled><option value="">-- 职业 --</option></select>
-            <button class="inner-btn" onclick="addSelectedSet()"><i class="material-icons-round" style="font-size:16px;">add</i>添加套装</button>
+            <select id="catSelect" class="inner-select" onchange="handleCategoryChange()">
+                <option value="">-- 分类 --</option>
+            </select>
+            <select id="setSelect" class="inner-select" disabled>
+                <option value="">-- 职业 --</option>
+            </select>
+            <button class="inner-btn" onclick="addSelectedSet()">添加套装</button>
         </div>
     </div>
 </aside>
 
-<div class="col-wrapper col-fixed right-col">
-    <div class="big-card full-height">
-        <div class="card-header-label">一级材料</div>
+<div class="col-wrapper right-col">
+    <div class="big-card">
+        <div class="card-header-label">成品清单</div>
+        <div class="section-title">Step 01: Final Goods</div>
         <div class="scroll-list" id="directList"></div>
     </div>
 </div>
 
 <div class="col-wrapper right-col">
     <div class="big-card">
-        <div class="card-header-label">二级材料</div>
-        <div class="scroll-list" style="overflow:visible;" id="subList"></div>
+        <div class="card-header-label">中间件清单</div>
+        <div class="section-title">Step 02: Intermediate</div>
+        <div class="scroll-list" id="subList"></div>
     </div>
-    <div class="big-card">
+    <div class="big-card crystal-card">
         <div class="card-header-label">
-            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                <span>水晶消耗</span>
-                <label class="mini-toggle">
-                    <span>自动满足</span>
-                    <input type="checkbox" id="crystalIgnoreToggle" checked onchange="calculateAll()">
-                    <div class="toggle-rail"></div>
-                </label>
-            </div>
+            <span>能量消耗</span>
+            <label class="mini-toggle">
+                <span>忽略</span>
+                <input type="checkbox" id="crystalIgnoreToggle" checked onchange="calculateAll()">
+                <div class="toggle-rail"></div>
+            </label>
         </div>
-        <div class="scroll-list" style="overflow:visible;" id="crystalList"></div>
+        <div class="scroll-list" id="crystalList"></div>
     </div>
 </div>
 
-<div class="col-wrapper col-fixed right-col">
-    <div class="big-card full-height">
-        <div class="card-header-label">三级材料</div>
+<div class="col-wrapper right-col">
+    <div class="big-card">
+        <div class="card-header-label">基础素材清单</div>
+        <div class="section-title">Step 03: Raw Materials</div>
         <div class="scroll-list" id="rawList"></div>
-        <div id="currencyFooter" class="currency-footer" style="display:none"><div id="currencyList"></div></div>
+        <div id="currencyFooter" class="currency-footer" style="display:none">
+            <div id="currencyList"></div>
+        </div>
     </div>
 </div>
 
@@ -173,8 +184,18 @@
     const crystalKeywords = ['之碎晶', '之水晶', '之晶簇', 'Shard', 'Crystal', 'Cluster'];
     const isCrystal = (n) => crystalKeywords.some(k => n.includes(k));
 
+    // 双击复制功能
+    async function copyName(name) {
+        try {
+            await navigator.clipboard.writeText(name);
+        } catch (err) {
+            console.error('无法复制', err);
+        }
+    }
+
+    // 数据加载
     Promise.all([
-        fetch('recipes.json').then(r => r.json()),
+        fetch('recipes.json').then(r => r.json()).catch(() => []),
         fetch('gear_sets.json').then(r => r.json()).catch(() => []),
         fetch('currency.json').then(r => r.json()).catch(() => ({}))
     ]).then(([recipes, sets, currencies]) => {
@@ -187,6 +208,7 @@
         const totalDirect = {}, totalSub = {}, totalRaw = {}, totalCrystals = {}, totalCurrency = {};
         const ignoreCrystals = document.getElementById('crystalIgnoreToggle').checked;
         const rightCols = document.querySelectorAll('.right-col');
+        
         if (cart.length > 0) rightCols.forEach(el => el.classList.add('active'));
         else rightCols.forEach(el => el.classList.remove('active'));
 
@@ -196,7 +218,10 @@
             const crafts = Math.ceil(cartItem.amount / recipe.amount);
             recipe.ingredients.forEach(ing => {
                 if (isCrystal(ing.name)) totalCrystals[ing.name] = (totalCrystals[ing.name] || 0) + (ing.amount * crafts);
-                else { if (!totalDirect[ing.name]) totalDirect[ing.name] = { amount: 0, id: ing.id }; totalDirect[ing.name].amount += (ing.amount * crafts); }
+                else { 
+                    if (!totalDirect[ing.name]) totalDirect[ing.name] = { amount: 0, id: ing.id }; 
+                    totalDirect[ing.name].amount += (ing.amount * crafts); 
+                }
             });
         });
 
@@ -238,35 +263,34 @@
         } else { if(!rawMap[itemName]) rawMap[itemName] = { amount: 0, id: itemId }; rawMap[itemName].amount += need; }
     }
 
-    // --- 核心渲染函数：更新输入框交互逻辑 ---
     function renderList(id, data) {
         const container = document.getElementById(id); container.innerHTML = '';
         Object.keys(data).sort((a,b) => ((inventory[a.trim()]||0) >= data[a].amount) - ((inventory[b.trim()]||0) >= data[b].amount)).forEach(name => {
-            const needed = data[name].amount, owned = inventory[name.trim()] || 0, isDone = owned >= needed, isReady = checkReady(name, needed);
-            const inputClass = owned > 0 ? 'val-filled' : 'val-empty';
-            const div = document.createElement('div');
-            div.className = `list-item ${isDone ? 'is-done' : ''} ${isReady && !isDone ? 'is-ready' : ''}`;
-            
+            const needed = data[name].amount, owned = inventory[name.trim()] || 0, isDone = owned >= needed;
             const cur = currencyMap[name.trim()];
             const curTag = cur ? `<div class="tag-currency">${cur.price} ${cur.name}</div>` : '';
 
-            div.innerHTML = `<div style="display:flex; flex-direction:column;">
-                <div style="display:flex;align-items:center;">${isDone ? '<i class="material-icons-round" style="font-size:16px;color:var(--success);margin-right:4px;">check_circle</i>' : ''}<span>${name}</span></div>
-                ${curTag}
-            </div>
-            <div class="qty-group">
-                <input type="number" 
-                       class="minimal-input ${inputClass}" 
-                       value="${owned}" 
-                       onfocus="this.select()"
-                       oninput="this.classList.toggle('val-filled', this.value > 0); this.classList.toggle('val-empty', this.value <= 0)"
-                       onchange="updateInv('${name}', this.value)" 
-                       onclick="event.stopPropagation()">
-                <span class="slash">/</span>
-                <span class="target-qty-right">${needed}</span>
-            </div>`;
-            div.onclick = () => updateInv(name, isDone ? 0 : needed);
-            container.appendChild(div);
+            const itemEl = document.createElement('div');
+            itemEl.className = `list-item ${isDone ? 'is-done' : ''}`;
+            itemEl.ondblclick = () => copyName(name);
+
+            itemEl.innerHTML = `
+                <div class="checkbox-wrapper" onclick="event.stopPropagation(); updateInv('${name}', ${isDone ? 0 : needed})">
+                    <div class="custom-checkbox"><i class="material-icons-round">done</i></div>
+                </div>
+                <div class="item-name-text">
+                    <div style="font-weight:500">${name}</div>
+                    ${curTag}
+                </div>
+                <div class="qty-group">
+                    <input type="number" class="minimal-input" value="${owned}" 
+                        onclick="event.stopPropagation()" onfocus="this.select()"
+                        onchange="updateInv('${name}', this.value)">
+                    <span style="color:#CCC; font-size:11px;">/</span>
+                    <span class="target-qty-right">${needed}</span>
+                </div>
+            `;
+            container.appendChild(itemEl);
         });
     }
 
@@ -274,41 +298,74 @@
         const container = document.getElementById('crystalList'); container.innerHTML = '';
         Object.keys(data).sort((a,b) => ((inventory[a.trim()]||0) >= data[a]) - ((inventory[b.trim()]||0) >= data[b])).forEach(name => {
             const needed = data[name], owned = inventory[name.trim()] || 0, isDone = ignore || (owned >= needed);
-            const div = document.createElement('div');
-            div.className = `list-item ${isDone ? 'is-done' : ''}`;
-            div.innerHTML = `<span>${name}</span>
+            const itemEl = document.createElement('div');
+            itemEl.className = `list-item ${isDone ? 'is-done' : ''}`;
+            itemEl.ondblclick = () => copyName(name);
+
+            itemEl.innerHTML = `
+                <div class="checkbox-wrapper" onclick="event.stopPropagation(); updateInv('${name}', ${isDone && !ignore ? 0 : needed})">
+                    <div class="custom-checkbox"><i class="material-icons-round">bolt</i></div>
+                </div>
+                <span class="item-name-text">${name}</span>
                 <div class="qty-group">
-                    <input type="number" 
-                           class="minimal-input ${owned > 0 ? 'val-filled' : 'val-empty'}" 
-                           value="${owned}" 
-                           onfocus="this.select()"
-                           oninput="this.classList.toggle('val-filled', this.value > 0); this.classList.toggle('val-empty', this.value <= 0)"
-                           onchange="updateInv('${name}', this.value)" 
-                           onclick="event.stopPropagation()">
-                    <span class="slash">/</span>
+                    <input type="number" class="minimal-input" value="${owned}" 
+                        onclick="event.stopPropagation()" onfocus="this.select()"
+                        onchange="updateInv('${name}', this.value)">
+                    <span style="color:#CCC; font-size:11px;">/</span>
                     <span class="target-qty-right">${needed}</span>
-                </div>`;
-            div.onclick = () => updateInv(name, isDone && !ignore ? 0 : needed);
-            container.appendChild(div);
+                </div>
+            `;
+            container.appendChild(itemEl);
         });
     }
 
-    function checkReady(name, needed) {
-        const recipe = recipeMap[name.trim()]; if (!recipe) return false;
-        const ignore = document.getElementById('crystalIgnoreToggle').checked;
-        const rounds = Math.ceil(needed / recipe.amount);
-        return recipe.ingredients.every(ing => (ignore && isCrystal(ing.name)) || (inventory[ing.name.trim()] || 0) >= (ing.amount * rounds));
+    function updateInv(name, val) { inventory[name.trim()] = Math.max(0, parseInt(val) || 0); calculateAll(); }
+    
+    function renderCart() {
+        const c = document.getElementById('cartList'); c.innerHTML = '';
+        if (cart.length === 0) { c.innerHTML = '<div style="text-align:center; margin-top:40px; color:#bdc1c6; font-size:11px;">( 暂无计划 )</div>'; return; }
+        cart.forEach((item, i) => {
+            const r = recipeMap[String(item.result_id)];
+            const div = document.createElement('div'); div.className = 'list-item'; div.style.padding = "8px 0";
+            div.innerHTML = `<div style="font-size:12px; flex:1;">${r.name}</div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="cursor:pointer" onclick="updateCart(${i},-1)">-</span>
+                    <b style="min-width:15px; text-align:center;">${item.amount}</b>
+                    <span style="cursor:pointer" onclick="updateCart(${i},1)">+</span>
+                </div>`;
+            c.appendChild(div);
+        });
     }
 
-    function updateInv(name, val) { inventory[name.trim()] = Math.max(0, parseInt(val) || 0); calculateAll(); }
-    function clearCart() { if(confirm("确定清空当前计划吗？")) { cart = []; calculateAll(); renderCart(); } }
+    function updateCart(i, d) { cart[i].amount += d; if(cart[i].amount <=0) cart.splice(i,1); calculateAll(); renderCart(); }
+    function clearCart() { if(confirm("确定清空计划？")) { cart = []; inventory = {}; calculateAll(); renderCart(); } }
+
     function renderCurrencyFooter(data) {
         const f = document.getElementById('currencyFooter'), l = document.getElementById('currencyList');
         if (Object.keys(data).length === 0) { f.style.display = 'none'; return; }
-        f.style.display = 'block'; l.innerHTML = '<div style="font-size:11px;color:#999;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">货币消耗统计</div>';
-        for (let n in data) l.innerHTML += `<div class="currency-row"><span>${n}</span><b style="font-weight:700;">${data[n]}</b></div>`;
+        f.style.display = 'block'; l.innerHTML = '<div style="font-size:10px;color:#999;margin-bottom:5px;font-weight:bold;">ESTIMATED COST</div>';
+        for (let n in data) l.innerHTML += `<div style="display:flex; justify-content:space-between"><span>${n}</span><b>${data[n]}</b></div>`;
     }
-    function initCategorySelect() { gearSets.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.text = c.category; document.getElementById('catSelect').add(o); }); }
+
+    document.getElementById('searchInput').oninput = function() {
+        const v = this.value.trim(), d = document.getElementById('searchDropdown'); d.innerHTML = '';
+        if(!v) { d.style.display='none'; return; }
+        allRecipes.filter(r => r.name.includes(v)).slice(0,10).forEach(r => {
+            const div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = r.name;
+            div.onclick = () => { 
+                const exist = cart.find(i => i.result_id === r.result_id); 
+                if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); 
+                d.style.display='none'; this.value=''; calculateAll(); renderCart(); 
+            };
+            d.appendChild(div);
+        });
+        d.style.display='block';
+    }
+
+    function initCategorySelect() { 
+        const catS = document.getElementById('catSelect');
+        gearSets.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.text = c.category; catS.add(o); }); 
+    }
     function handleCategoryChange() {
         const idx = document.getElementById('catSelect').value, s = document.getElementById('setSelect');
         s.innerHTML = '<option value="">-- 选择职业 --</option>';
@@ -324,27 +381,6 @@
             if (r) { const exist = cart.find(i => i.result_id === r.result_id); if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); }
         });
         calculateAll(); renderCart();
-    }
-    function renderCart() {
-        const c = document.getElementById('cartList'); c.innerHTML = '';
-        if (cart.length === 0) { c.innerHTML = '<div style="text-align:center; margin-top:40px; color:#bdc1c6; font-size:12px;">暂无计划</div>'; return; }
-        cart.forEach((item, i) => {
-            const r = recipeMap[String(item.result_id)];
-            const div = document.createElement('div'); div.className = 'list-item';
-            div.innerHTML = `<div class="item-name-sidebar">${r.name}</div><div class="stepper"><div class="btn-step" onclick="updateCart(${i},-1)">－</div><div class="qty-sb">${item.amount}</div><div class="btn-step" onclick="updateCart(${i},1)">＋</div></div>`;
-            c.appendChild(div);
-        });
-    }
-    function updateCart(i, d) { cart[i].amount += d; if(cart[i].amount <=0) cart.splice(i,1); calculateAll(); renderCart(); }
-    document.getElementById('searchInput').oninput = function() {
-        const v = this.value.trim(), d = document.getElementById('searchDropdown'); d.innerHTML = '';
-        if(!v) { d.style.display='none'; return; }
-        allRecipes.filter(r => r.name.includes(v)).slice(0,8).forEach(r => {
-            const div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = r.name;
-            div.onclick = () => { const exist = cart.find(i => i.result_id === r.result_id); if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); d.style.display='none'; this.value=''; calculateAll(); renderCart(); };
-            d.appendChild(div);
-        });
-        d.style.display='block';
     }
 </script>
 </body>
