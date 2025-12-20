@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FFXIV Craft Helper</title>
+    <title>FFXIV Craft Helper v2.0 by ooOO</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         /* --- 核心变量 --- */
@@ -25,7 +25,6 @@
             background-color: var(--bg-body); color: var(--text-main);
             margin: 0; height: 100vh; display: grid; grid-template-columns: 310px repeat(3, 1fr);
             overflow: hidden; 
-            /* 纸张网格背景 */
             background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
                               linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
             background-size: 25px 25px;
@@ -87,7 +86,6 @@
         .col-wrapper.active { visibility: visible; opacity: 1; }
         
         .big-card { background: var(--surface); border: 1px solid #D1CFCA; display: flex; flex-direction: column; flex: 1; box-shadow: var(--shadow-paper); position: relative; overflow: hidden; }
-        /* 左侧模拟装订孔效果 */
         .big-card::after { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background-image: radial-gradient(#EAE8E2 1.5px, transparent 1.5px); background-size: 4px 20px; }
 
         .section-title { font-size: 10px; font-weight: 700; padding: 6px 15px; border-bottom: 1px solid var(--divider); color: var(--text-sub); background: #FDFDFB; text-transform: uppercase; }
@@ -157,10 +155,10 @@
     </div>
     <div class="big-card crystal-card">
         <div class="card-header-label">
-            <span>能量消耗</span>
+            <span>水晶消耗</span>
             <label class="mini-toggle">
                 <span>忽略</span>
-                <input type="checkbox" id="crystalIgnoreToggle" checked onchange="calculateAll()">
+                <input type="checkbox" id="crystalIgnoreToggle" checked onchange="saveConfig(); calculateAll()">
                 <div class="toggle-rail"></div>
             </label>
         </div>
@@ -184,16 +182,34 @@
     const crystalKeywords = ['之碎晶', '之水晶', '之晶簇', 'Shard', 'Crystal', 'Cluster'];
     const isCrystal = (n) => crystalKeywords.some(k => n.includes(k));
 
-    // 双击复制功能
-    async function copyName(name) {
-        try {
-            await navigator.clipboard.writeText(name);
-        } catch (err) {
-            console.error('无法复制', err);
+    // --- 数据持久化核心函数 ---
+    function saveAllData() {
+        localStorage.setItem('ffxiv_craft_cart', JSON.stringify(cart));
+        localStorage.setItem('ffxiv_craft_inventory', JSON.stringify(inventory));
+    }
+
+    function saveConfig() {
+        localStorage.setItem('ffxiv_craft_ignore_crystals', document.getElementById('crystalIgnoreToggle').checked);
+    }
+
+    function loadAllData() {
+        const savedCart = localStorage.getItem('ffxiv_craft_cart');
+        const savedInv = localStorage.getItem('ffxiv_craft_inventory');
+        const savedIgnore = localStorage.getItem('ffxiv_craft_ignore_crystals');
+
+        if (savedCart) cart = JSON.parse(savedCart);
+        if (savedInv) inventory = JSON.parse(savedInv);
+        if (savedIgnore !== null) {
+            document.getElementById('crystalIgnoreToggle').checked = (savedIgnore === 'true');
         }
     }
 
-    // 数据加载
+    // 双击复制
+    async function copyName(name) {
+        try { await navigator.clipboard.writeText(name); } catch (err) { console.error('无法复制', err); }
+    }
+
+    // 初始化加载
     Promise.all([
         fetch('recipes.json').then(r => r.json()).catch(() => []),
         fetch('gear_sets.json').then(r => r.json()).catch(() => []),
@@ -201,7 +217,11 @@
     ]).then(([recipes, sets, currencies]) => {
         allRecipes = recipes; gearSets = sets; currencyMap = currencies;
         recipes.forEach(r => { recipeMap[String(r.result_id)] = r; recipeMap[r.name.trim()] = r; });
+        
+        loadAllData(); // 读取本地缓存
         initCategorySelect();
+        renderCart();
+        calculateAll();
     });
 
     function calculateAll() {
@@ -319,7 +339,11 @@
         });
     }
 
-    function updateInv(name, val) { inventory[name.trim()] = Math.max(0, parseInt(val) || 0); calculateAll(); }
+    function updateInv(name, val) { 
+        inventory[name.trim()] = Math.max(0, parseInt(val) || 0); 
+        saveAllData(); // 保存修改
+        calculateAll(); 
+    }
     
     function renderCart() {
         const c = document.getElementById('cartList'); c.innerHTML = '';
@@ -337,8 +361,23 @@
         });
     }
 
-    function updateCart(i, d) { cart[i].amount += d; if(cart[i].amount <=0) cart.splice(i,1); calculateAll(); renderCart(); }
-    function clearCart() { if(confirm("确定清空计划？")) { cart = []; inventory = {}; calculateAll(); renderCart(); } }
+    function updateCart(i, d) { 
+        cart[i].amount += d; 
+        if(cart[i].amount <=0) cart.splice(i,1); 
+        saveAllData(); // 保存修改
+        calculateAll(); 
+        renderCart(); 
+    }
+
+    function clearCart() { 
+        if(confirm("确定清空计划和所有进度？")) { 
+            cart = []; 
+            inventory = {}; 
+            localStorage.clear(); // 清除本地缓存
+            calculateAll(); 
+            renderCart(); 
+        } 
+    }
 
     function renderCurrencyFooter(data) {
         const f = document.getElementById('currencyFooter'), l = document.getElementById('currencyList');
@@ -355,6 +394,7 @@
             div.onclick = () => { 
                 const exist = cart.find(i => i.result_id === r.result_id); 
                 if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); 
+                saveAllData(); // 保存修改
                 d.style.display='none'; this.value=''; calculateAll(); renderCart(); 
             };
             d.appendChild(div);
@@ -366,6 +406,7 @@
         const catS = document.getElementById('catSelect');
         gearSets.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.text = c.category; catS.add(o); }); 
     }
+
     function handleCategoryChange() {
         const idx = document.getElementById('catSelect').value, s = document.getElementById('setSelect');
         s.innerHTML = '<option value="">-- 选择职业 --</option>';
@@ -373,6 +414,7 @@
         gearSets[idx].sets.forEach((set, i) => { const o = document.createElement('option'); o.value = `${idx}-${i}`; o.text = set.name; s.add(o); });
         s.disabled = false;
     }
+
     function addSelectedSet() {
         const v = document.getElementById('setSelect').value; if (!v) return;
         const [c, s] = v.split('-').map(Number);
@@ -380,6 +422,7 @@
             const r = allRecipes.find(rec => rec.name.trim() === name.trim());
             if (r) { const exist = cart.find(i => i.result_id === r.result_id); if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); }
         });
+        saveAllData(); // 保存修改
         calculateAll(); renderCart();
     }
 </script>
