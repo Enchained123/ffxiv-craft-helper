@@ -6,7 +6,7 @@
     <title>FFXIV Craft Helper</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        /* --- 核心变量 --- */
+        /* --- 核心变量 (严格保留) --- */
         :root {
             --primary: #1a73e8;
             --bg-body: #f8f9fa; 
@@ -22,6 +22,7 @@
             --border-light: #dadce0;
             --currency-bg: #f3e8fd;
             --currency-text: #8430ce;
+            --success: #34a853;
         }
 
         * { box-sizing: border-box; }
@@ -31,72 +32,56 @@
             margin: 0; height: 100vh; display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden; 
         }
 
-        /* --- 第一列：侧边栏 --- */
+        /* --- 侧边栏 --- */
         aside { padding: 24px 12px 24px 24px; display: flex; flex-direction: column; gap: 16px; height: 100vh; }
         .brand { padding: 0 8px; font-size: 18px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 10px; }
         .brand i { color: var(--text-dark); font-size: 24px; }
-
         .search-bar-box { border: 1px solid var(--border-light); border-radius: 20px; display: flex; align-items: center; padding: 8px 16px; transition: 0.2s; }
         .search-bar-box:focus-within { border-color: var(--primary); background: white; }
         .search-bar-box input { border: none; background: transparent; outline: none; margin-left: 8px; font-size: 14px; width: 100%; }
 
-        /* 左侧大卡片容器 */
-        .sidebar-card { 
-            background: var(--surface); 
-            border-radius: var(--radius-large); 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03); 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            border: 1px solid rgba(0,0,0,0.05); 
-        }
-        
+        .sidebar-card { background: var(--surface); border-radius: var(--radius-large); box-shadow: 0 1px 3px rgba(0,0,0,0.03); flex: 1; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
         .card-header-label { padding: 24px 24px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 400; color: var(--text-sub); }
 
         .scroll-list { flex: 1; overflow-y: auto; padding: 0 24px; display: flex; flex-direction: column; }
         .scroll-list::-webkit-scrollbar { width: 0; }
 
-        /* 列表项 */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 0.5px solid var(--divider); font-size: 14px; background: white; }
         .list-item:last-child { border-bottom: none; }
         .item-name-sidebar { font-size: 14px; font-weight: 400; color: var(--text-dark); flex: 1; padding-right: 8px; }
 
-        /* 加减器 */
         .stepper { display: flex; align-items: center; gap: 6px; background: var(--bg-body); padding: 2px 4px; border-radius: 8px; transform: scale(0.85); transform-origin: right center; }
         .btn-step { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-sub); cursor: pointer; }
         .btn-step:hover { background: white; color: var(--text-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .qty-sb { font-size: 12px; font-weight: 700; min-width: 14px; text-align: center; }
 
-        /* 【内嵌导入组件 - 像素级还原】 */
-        .import-box-inner {
-            background: #f8f9fa; /* 浅灰色背景 */
-            margin: 10px 16px 16px;
-            padding: 16px;
-            border-radius: var(--radius-inner);
-            display: flex; flex-direction: column; gap: 10px;
-        }
+        .import-box-inner { background: #f8f9fa; margin: 10px 16px 16px; padding: 16px; border-radius: var(--radius-inner); display: flex; flex-direction: column; gap: 10px; }
         .inner-select { background: white; border: 1px solid #eee; padding: 8px; border-radius: 10px; font-size: 12px; outline: none; cursor: pointer; color: var(--text-main); }
         .inner-btn { background: var(--text-dark); color: white; border: none; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .inner-btn:hover { opacity: 0.9; }
 
-        /* --- 右侧三列布局 --- */
+        /* --- 右侧布局 --- */
         .col-wrapper { padding: 24px 24px 24px 12px; display: flex; flex-direction: column; gap: 24px; height: 100vh; overflow-y: auto; visibility: hidden; opacity: 0; transition: opacity 0.3s; }
-        .col-wrapper.active { visibility: visible; opacity: 1; } /* 有计划时显示 */
-        
+        .col-wrapper.active { visibility: visible; opacity: 1; }
         .col-fixed { height: 100vh; overflow: hidden; }
         .big-card { background: var(--surface); border-radius: var(--radius-large); box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.05); width: 100%; }
         .full-height { flex: 1; overflow: hidden; }
 
-        /* 极简数字输入 */
+        /* --- 极简数字输入逻辑 (优化版) --- */
         .qty-group { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 80px; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
-        .minimal-input { width: 45px; border: none; background: transparent; text-align: right; font-size: 14px; font-weight: 600; outline: none; padding: 4px 6px; border-radius: 6px; transition: 0.2s; }
+        .minimal-input { 
+            width: 45px; border: none; background: transparent; 
+            text-align: right; font-size: 14px; font-weight: 600; 
+            outline: none; padding: 4px 6px; border-radius: 6px; 
+            transition: color 0.1s, background 0.2s;
+        }
         .minimal-input:hover, .minimal-input:focus { background: #f0f0f0; }
-        .val-empty { color: var(--text-grey-light); } 
-        .val-filled { color: var(--text-input); }
+        
+        .val-empty { color: var(--text-grey-light); } /* 0色 */
+        .val-filled { color: var(--text-input); }      /* 输入后色 */
+        
         .slash { color: var(--text-grey-light); font-size: 12px; margin: 0 2px; }
         .target-qty-right { font-weight: 600; color: var(--text-sub); min-width: 25px; text-align: right; font-size: 14px; }
 
@@ -105,12 +90,10 @@
         .is-done { opacity: 0.3 !important; text-decoration: line-through !important; order: 999 !important; background: transparent !important; }
         .is-done .minimal-input { visibility: hidden; }
 
-        /* 货币统计 */
+        /* 货币与开关 */
         .tag-currency { font-size: 10px; color: var(--currency-text); background: var(--currency-bg); padding: 1px 6px; border-radius: 4px; margin-top: 3px; display: inline-block; width: fit-content; }
         .currency-footer { padding: 15px 24px; background: #fdfdfd; border-top: 1px solid var(--divider); border-radius: 0 0 32px 32px; }
         .currency-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--currency-text); }
-
-        /* 水晶开关 */
         .mini-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-sub); cursor: pointer; }
         .mini-toggle input { display: none; }
         .toggle-rail { width: 28px; height: 16px; background: #eee; border-radius: 10px; position: relative; transition: 0.3s; }
@@ -128,25 +111,21 @@
 </head>
 <body>
 
-<!-- 第一列：侧边栏 -->
 <aside>
-    <div class="brand"><i class="material-icons-round">auto_awesome</i><span>FFXIV Craft</span></div>
+    <div class="brand"><i class="material-icons-round">auto_awesome</i><span>FFXIV Craft Helper</span></div>
     <div class="search-bar-box">
         <i class="material-icons-round" style="color:#999; font-size: 18px;">search</i>
         <input type="text" id="searchInput" placeholder="搜索配方..." autocomplete="off">
         <div id="searchDropdown" class="dropdown"></div>
     </div>
-
     <div class="sidebar-card">
         <div class="card-header-label">
             <span>当前计划</span>
             <span style="color:var(--text-dark); cursor:pointer; font-weight:500;" onclick="clearCart()">清空</span>
         </div>
         <div class="scroll-list" id="cartList"></div>
-        
-        <!-- 【内嵌导入组件 - 严格还原样式】 -->
         <div class="import-box-inner">
-            <div style="font-size:11px; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">快速导入</div>
+            <div style="font-size:11px; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">快速导入套装</div>
             <select id="catSelect" class="inner-select" onchange="handleCategoryChange()"><option value="">-- 分类 --</option></select>
             <select id="setSelect" class="inner-select" disabled><option value="">-- 职业 --</option></select>
             <button class="inner-btn" onclick="addSelectedSet()"><i class="material-icons-round" style="font-size:16px;">add</i>添加套装</button>
@@ -154,7 +133,6 @@
     </div>
 </aside>
 
-<!-- 第二列：一级材料 (带 active 控制显隐) -->
 <div class="col-wrapper col-fixed right-col">
     <div class="big-card full-height">
         <div class="card-header-label">一级材料</div>
@@ -162,7 +140,6 @@
     </div>
 </div>
 
-<!-- 第三列：二级材料 + 水晶 (带 active 控制显隐) -->
 <div class="col-wrapper right-col">
     <div class="big-card">
         <div class="card-header-label">二级材料</div>
@@ -183,7 +160,6 @@
     </div>
 </div>
 
-<!-- 第四列：三级材料 (带 active 控制显隐) -->
 <div class="col-wrapper col-fixed right-col">
     <div class="big-card full-height">
         <div class="card-header-label">三级材料</div>
@@ -210,27 +186,20 @@
     function calculateAll() {
         const totalDirect = {}, totalSub = {}, totalRaw = {}, totalCrystals = {}, totalCurrency = {};
         const ignoreCrystals = document.getElementById('crystalIgnoreToggle').checked;
-
-        // 控制右侧三列显示/隐藏
         const rightCols = document.querySelectorAll('.right-col');
-        if (cart.length > 0) {
-            rightCols.forEach(el => el.classList.add('active'));
-        } else {
-            rightCols.forEach(el => el.classList.remove('active'));
-        }
+        if (cart.length > 0) rightCols.forEach(el => el.classList.add('active'));
+        else rightCols.forEach(el => el.classList.remove('active'));
 
-        // 1. 计算第一层
         cart.forEach(cartItem => {
             const recipe = recipeMap[String(cartItem.result_id)];
             if (!recipe) return;
             const crafts = Math.ceil(cartItem.amount / recipe.amount);
             recipe.ingredients.forEach(ing => {
-                if (isCrystal(ing.name)) { totalCrystals[ing.name] = (totalCrystals[ing.name] || 0) + (ing.amount * crafts); }
+                if (isCrystal(ing.name)) totalCrystals[ing.name] = (totalCrystals[ing.name] || 0) + (ing.amount * crafts);
                 else { if (!totalDirect[ing.name]) totalDirect[ing.name] = { amount: 0, id: ing.id }; totalDirect[ing.name].amount += (ing.amount * crafts); }
             });
         });
 
-        // 2. 链式扣除拆解
         for (let name in totalDirect) {
             const item = totalDirect[name], owned = inventory[name.trim()] || 0, remaining = Math.max(0, item.amount - owned);
             const subRecipe = recipeMap[String(item.id)];
@@ -243,13 +212,9 @@
             }
         }
 
-        // 3. 计算货币消耗
         for (let name in totalRaw) {
-            const cleanName = name.trim();
-            if (currencyMap[cleanName]) {
-                const info = currencyMap[cleanName];
-                totalCurrency[info.name] = (totalCurrency[info.name] || 0) + (info.price * totalRaw[name].amount);
-            }
+            const cn = name.trim();
+            if (currencyMap[cn]) totalCurrency[currencyMap[cn].name] = (totalCurrency[currencyMap[cn].name] || 0) + (currencyMap[cn].price * totalRaw[name].amount);
         }
 
         renderList('directList', totalDirect);
@@ -261,8 +226,7 @@
 
     function solveChainRecursive(itemId, need, subMap, rawMap, cryMap, itemName) {
         if (isCrystal(itemName)) { cryMap[itemName] = (cryMap[itemName] || 0) + need; return; }
-        const owned = inventory[itemName.trim()] || 0;
-        const recipe = recipeMap[String(itemId)];
+        const owned = inventory[itemName.trim()] || 0, recipe = recipeMap[String(itemId)];
         if (recipe) {
             if(!subMap[itemName]) subMap[itemName] = { amount: 0, id: itemId };
             subMap[itemName].amount += need;
@@ -271,16 +235,15 @@
                 const crafts = Math.ceil(netNeed / recipe.amount);
                 recipe.ingredients.forEach(ing => solveChainRecursive(ing.id, ing.amount * crafts, subMap, rawMap, cryMap, ing.name));
             }
-        } else {
-            if(!rawMap[itemName]) rawMap[itemName] = { amount: 0, id: itemId };
-            rawMap[itemName].amount += need;
-        }
+        } else { if(!rawMap[itemName]) rawMap[itemName] = { amount: 0, id: itemId }; rawMap[itemName].amount += need; }
     }
 
+    // --- 核心渲染函数：更新输入框交互逻辑 ---
     function renderList(id, data) {
         const container = document.getElementById(id); container.innerHTML = '';
-        Object.keys(data).sort((a,b) => (inventory[a.trim()]||0 >= data[a].amount) - (inventory[b.trim()]||0 >= data[b].amount)).forEach(name => {
+        Object.keys(data).sort((a,b) => ((inventory[a.trim()]||0) >= data[a].amount) - ((inventory[b.trim()]||0) >= data[b].amount)).forEach(name => {
             const needed = data[name].amount, owned = inventory[name.trim()] || 0, isDone = owned >= needed, isReady = checkReady(name, needed);
+            const inputClass = owned > 0 ? 'val-filled' : 'val-empty';
             const div = document.createElement('div');
             div.className = `list-item ${isDone ? 'is-done' : ''} ${isReady && !isDone ? 'is-ready' : ''}`;
             
@@ -291,7 +254,17 @@
                 <div style="display:flex;align-items:center;">${isDone ? '<i class="material-icons-round" style="font-size:16px;color:var(--success);margin-right:4px;">check_circle</i>' : ''}<span>${name}</span></div>
                 ${curTag}
             </div>
-            <div class="qty-group"><input type="number" class="minimal-input ${owned>0?'val-filled':'val-empty'}" value="${owned}" onchange="updateInv('${name}', this.value)" onclick="event.stopPropagation()"><span class="slash">/</span><span class="target-qty-right">${needed}</span></div>`;
+            <div class="qty-group">
+                <input type="number" 
+                       class="minimal-input ${inputClass}" 
+                       value="${owned}" 
+                       onfocus="this.select()"
+                       oninput="this.classList.toggle('val-filled', this.value > 0); this.classList.toggle('val-empty', this.value <= 0)"
+                       onchange="updateInv('${name}', this.value)" 
+                       onclick="event.stopPropagation()">
+                <span class="slash">/</span>
+                <span class="target-qty-right">${needed}</span>
+            </div>`;
             div.onclick = () => updateInv(name, isDone ? 0 : needed);
             container.appendChild(div);
         });
@@ -299,10 +272,22 @@
 
     function renderCrystalList(data, ignore) {
         const container = document.getElementById('crystalList'); container.innerHTML = '';
-        Object.keys(data).sort((a,b) => (inventory[a.trim()]||0 >= data[a]) - (inventory[b.trim()]||0 >= data[b])).forEach(name => {
+        Object.keys(data).sort((a,b) => ((inventory[a.trim()]||0) >= data[a]) - ((inventory[b.trim()]||0) >= data[b])).forEach(name => {
             const needed = data[name], owned = inventory[name.trim()] || 0, isDone = ignore || (owned >= needed);
-            const div = document.createElement('div'); div.className = `list-item ${isDone ? 'is-done' : ''}`;
-            div.innerHTML = `<span>${name}</span><div class="qty-group"><input type="number" class="minimal-input ${owned>0?'val-filled':'val-empty'}" value="${owned}" onchange="updateInv('${name}', this.value)" onclick="event.stopPropagation()"><span class="slash">/</span><span class="target-qty-right">${needed}</span></div>`;
+            const div = document.createElement('div');
+            div.className = `list-item ${isDone ? 'is-done' : ''}`;
+            div.innerHTML = `<span>${name}</span>
+                <div class="qty-group">
+                    <input type="number" 
+                           class="minimal-input ${owned > 0 ? 'val-filled' : 'val-empty'}" 
+                           value="${owned}" 
+                           onfocus="this.select()"
+                           oninput="this.classList.toggle('val-filled', this.value > 0); this.classList.toggle('val-empty', this.value <= 0)"
+                           onchange="updateInv('${name}', this.value)" 
+                           onclick="event.stopPropagation()">
+                    <span class="slash">/</span>
+                    <span class="target-qty-right">${needed}</span>
+                </div>`;
             div.onclick = () => updateInv(name, isDone && !ignore ? 0 : needed);
             container.appendChild(div);
         });
@@ -310,21 +295,19 @@
 
     function checkReady(name, needed) {
         const recipe = recipeMap[name.trim()]; if (!recipe) return false;
-        const ignoreCrystals = document.getElementById('crystalIgnoreToggle').checked;
+        const ignore = document.getElementById('crystalIgnoreToggle').checked;
         const rounds = Math.ceil(needed / recipe.amount);
-        return recipe.ingredients.every(ing => (ignoreCrystals && isCrystal(ing.name)) || (inventory[ing.name.trim()] || 0) >= (ing.amount * rounds));
+        return recipe.ingredients.every(ing => (ignore && isCrystal(ing.name)) || (inventory[ing.name.trim()] || 0) >= (ing.amount * rounds));
     }
 
     function updateInv(name, val) { inventory[name.trim()] = Math.max(0, parseInt(val) || 0); calculateAll(); }
     function clearCart() { if(confirm("确定清空当前计划吗？")) { cart = []; calculateAll(); renderCart(); } }
-    
     function renderCurrencyFooter(data) {
-        const f = document.getElementById('currencyFooter'); const l = document.getElementById('currencyList');
+        const f = document.getElementById('currencyFooter'), l = document.getElementById('currencyList');
         if (Object.keys(data).length === 0) { f.style.display = 'none'; return; }
         f.style.display = 'block'; l.innerHTML = '<div style="font-size:11px;color:#999;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">货币消耗统计</div>';
         for (let n in data) l.innerHTML += `<div class="currency-row"><span>${n}</span><b style="font-weight:700;">${data[n]}</b></div>`;
     }
-
     function initCategorySelect() { gearSets.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.text = c.category; document.getElementById('catSelect').add(o); }); }
     function handleCategoryChange() {
         const idx = document.getElementById('catSelect').value, s = document.getElementById('setSelect');
