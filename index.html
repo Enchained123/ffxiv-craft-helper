@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FFXIV Craft Helper v2.0 by ooOO</title>
+    <title>FFXIV Craft Helper v2.0 by ooOO (Journal Ver)</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         /* --- 核心变量 --- */
@@ -17,6 +17,11 @@
             --divider: #EAE8E2;
             --grid-line: rgba(210, 205, 195, 0.4);
             --shadow-paper: 0 2px 10px rgba(0,0,0,0.03);
+            
+            /* 手账风新增颜色 */
+            --tape-color-1: rgba(230, 190, 190, 0.6); /* 藕粉色胶带 */
+            --tape-color-2: rgba(190, 210, 230, 0.6); /* 雾霾蓝胶带 */
+            --tape-color-3: rgba(210, 230, 190, 0.6); /* 抹茶绿胶带 */
         }
 
         * { box-sizing: border-box; }
@@ -25,29 +30,41 @@
             background-color: var(--bg-body); color: var(--text-main);
             margin: 0; height: 100vh; display: grid; grid-template-columns: 310px repeat(3, 1fr);
             overflow: hidden; 
+            /* 背景网格稍微调整，更有信纸感 */
             background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
                               linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
             background-size: 25px 25px;
+            position: relative; /* 为绝对定位的装饰物提供基准 */
         }
 
         /* --- 侧边栏 --- */
         aside { 
             padding: 24px; display: flex; flex-direction: column; gap: 20px; 
             height: 100vh; border-right: 1px solid var(--divider); background: #F2F0E9;
+            position: relative; z-index: 2; /* 保证侧边栏在装饰物之上 */
         }
-        .brand { font-size: 15px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid var(--text-dark); padding-bottom: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .brand { font-size: 15px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid var(--text-dark); padding-bottom: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; position: relative;}
         
-        .search-bar-box { background: var(--surface); border: 1px solid #D1CFCA; display: flex; align-items: center; padding: 8px 12px; position: relative; }
+        /* 搜索栏样式微调 */
+        .search-bar-box { background: var(--surface); border: 1px solid #D1CFCA; display: flex; align-items: center; padding: 8px 12px; position: relative; border-radius: 2px; }
         .search-bar-box input { border: none; background: transparent; outline: none; font-size: 13px; width: 100%; }
         
         .dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #D1CFCA; z-index: 200; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .dropdown-item { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--divider); }
         .dropdown-item:hover { background: #F9F8F5; }
 
-        .sidebar-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #D1CFCA; background: var(--surface); box-shadow: var(--shadow-paper); }
+        /* 卡片基础样式 - 增加相对定位以便贴胶带 */
+        .sidebar-card, .big-card { 
+            position: relative; 
+            background: var(--surface); 
+            border: 1px solid #D1CFCA; 
+            box-shadow: var(--shadow-paper); 
+        }
+
+        .sidebar-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .card-header-label { padding: 12px 15px; font-size: 12px; font-weight: bold; color: var(--text-dark); background: #FAF9F6; border-bottom: 1px solid var(--divider); display: flex; justify-content: space-between; align-items: center; }
 
-        .scroll-list { flex: 1; overflow-y: auto; padding: 0 15px; }
+        .scroll-list { flex: 1; overflow-y: auto; padding: 0 15px; z-index: 1; position: relative; }
         
         /* --- 列表项交互 --- */
         .list-item { 
@@ -78,15 +95,16 @@
 
         /* 快速导入 */
         .import-box-inner { padding: 15px; border-top: 1px solid var(--divider); display: flex; flex-direction: column; gap: 8px; background: #FAF9F6; }
-        .inner-select { border: 1px solid #D1CFCA; padding: 6px; font-size: 12px; outline: none; width: 100%; }
+        .inner-select { border: 1px solid #D1CFCA; padding: 6px; font-size: 12px; outline: none; width: 100%; background: white; }
         .inner-btn { background: #4A4A4A; color: #fff; border: none; padding: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 2px; }
 
         /* 右侧布局 */
-        .col-wrapper { padding: 20px 10px; display: flex; flex-direction: column; height: 100vh; position: relative; visibility: hidden; opacity: 0; transition: 0.3s; }
+        .col-wrapper { padding: 20px 10px; display: flex; flex-direction: column; height: 100vh; position: relative; visibility: hidden; opacity: 0; transition: 0.3s; z-index: 2; }
         .col-wrapper.active { visibility: visible; opacity: 1; }
         
-        .big-card { background: var(--surface); border: 1px solid #D1CFCA; display: flex; flex-direction: column; flex: 1; box-shadow: var(--shadow-paper); position: relative; overflow: hidden; }
-        .big-card::after { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background-image: radial-gradient(#EAE8E2 1.5px, transparent 1.5px); background-size: 4px 20px; }
+        .big-card { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        /* 移除原来的伪元素装饰，改用手账风装饰 */
+        /* .big-card::after { ... } */
 
         .section-title { font-size: 10px; font-weight: 700; padding: 6px 15px; border-bottom: 1px solid var(--divider); color: var(--text-sub); background: #FDFDFB; text-transform: uppercase; }
         
@@ -107,12 +125,135 @@
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #E0DDD5; }
+
+        /* ========================================= */
+        /* === 手账风格装饰 CSS (Journal Styles) === */
+        /* ========================================= */
+
+        /* 1. 和纸胶带 (Washi Tape) */
+        /* 胶带公共样式 */
+        .decor-tape {
+            position: absolute;
+            height: 28px;
+            width: 100px;
+            left: 50%;
+            top: -12px;
+            transform: translateX(-50%) rotate(-2deg);
+            background-color: var(--tape-color-1);
+            opacity: 0.85;
+            z-index: 10;
+            pointer-events: none; /* 关键：让鼠标可以穿透 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            /* 制作锯齿边缘 */
+            clip-path: polygon(
+                2% 0%, 98% 0%, 100% 10%, 98% 20%, 100% 30%, 98% 40%, 100% 50%, 98% 60%, 100% 70%, 98% 80%, 100% 90%, 98% 100%,
+                2% 100%, 0% 90%, 2% 80%, 0% 70%, 2% 60%, 0% 50%, 2% 40%, 0% 30%, 2% 20%, 0% 10%
+            );
+        }
+
+        /* 不同位置的胶带变体 */
+        .tape-pink { background: var(--tape-color-1); transform: translateX(-50%) rotate(-1.5deg); }
+        .tape-blue { background: var(--tape-color-2); transform: translateX(-50%) rotate(1deg); width: 90px;}
+        .tape-green { background: var(--tape-color-3); transform: translateX(-50%) rotate(-0.5deg); width: 110px;}
+        
+        /* 2. 手绘 SVG 图标 (Stickers) */
+        .sticker {
+            position: absolute;
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0.9;
+        }
+
+        /* 侧边栏的猫爪 */
+        .sticker-paw {
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            fill: #D3C0B0;
+            opacity: 0.4;
+            transform: rotate(15deg);
+        }
+
+        /* 标题旁边的星星 */
+        .sticker-star {
+            top: 22px;
+            right: 20px;
+            width: 20px;
+            height: 20px;
+            fill: #E6B422;
+        }
+
+        /* 背景的大咖啡渍 */
+        .bg-stain {
+            position: fixed;
+            bottom: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.08;
+            fill: #5C4033;
+        }
+
+        /* 回形针 (Paperclip) - 纯 CSS 模拟 */
+        .paperclip {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            width: 14px;
+            height: 45px;
+            border: 3px solid #777;
+            border-radius: 10px;
+            z-index: 20;
+            opacity: 0.6;
+            pointer-events: none;
+            border-bottom: none;
+        }
+        .paperclip::after {
+            content: "";
+            position: absolute;
+            top: 10px;
+            right: -3px;
+            width: 14px;
+            height: 25px;
+            border: 3px solid #777;
+            border-radius: 10px;
+            border-top: none;
+        }
+
+        /* 小涂鸦：叶子 */
+        .doodle-leaf {
+            position: absolute;
+            top: -15px;
+            left: -10px;
+            width: 30px;
+            height: 30px;
+            fill: #8FBC8F;
+            z-index: 20;
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body>
 
+<!-- 背景装饰：咖啡渍 -->
+<svg class="bg-stain" viewBox="0 0 200 200">
+    <path d="M100,10 C50,10 10,50 10,100 C10,150 50,190 100,190 C150,190 190,150 190,100 C190,50 150,10 100,10 M100,20 C145,20 180,55 180,100 C180,145 145,180 100,180 C55,180 20,145 20,100 C20,55 55,20 100,20" />
+</svg>
+
 <aside>
-    <div class="brand"><i class="material-icons-round" style="font-size:18px;">auto_awesome</i><span>FFXIV Craft Helper</span></div>
+    <!-- 装饰：侧边栏卡子 -->
+    <div class="paperclip"></div>
+
+    <div class="brand">
+        <i class="material-icons-round" style="font-size:18px; color:var(--primary);">auto_awesome</i>
+        <span>FFXIV Craft Helper</span>
+        <!-- 装饰：标题星星 -->
+        <svg class="sticker sticker-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </div>
     
     <div class="search-bar-box">
         <i class="material-icons-round" style="font-size: 16px; color:var(--text-sub);">search</i>
@@ -121,6 +262,9 @@
     </div>
 
     <div class="sidebar-card">
+        <!-- 装饰：粉色胶带 -->
+        <div class="decor-tape tape-pink"></div>
+        
         <div class="card-header-label">
             <span>当前计划</span>
             <span style="cursor:pointer; font-weight: normal; font-size:10px; text-decoration: underline;" onclick="clearCart()">RESET</span>
@@ -136,11 +280,19 @@
             </select>
             <button class="inner-btn" onclick="addSelectedSet()">添加套装</button>
         </div>
+
+        <!-- 装饰：底部猫爪 -->
+        <svg class="sticker sticker-paw" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9c.83 0 1.5-.67 1.5-1.5S7.83 8 7 8s-1.5.67-1.5 1.5S6.17 11 7 11zm3.5-3c.83 0 1.5-.67 1.5-1.5S11.33 5 10.5 5 9 5.67 9 6.5s.67 1.5 1.5 1.5zm3.5 0c.83 0 1.5-.67 1.5-1.5S14.83 5 14 5s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm3.5 3c.83 0 1.5-.67 1.5-1.5S18.33 8 17.5 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/></svg>
     </div>
 </aside>
 
 <div class="col-wrapper right-col">
     <div class="big-card">
+        <!-- 装饰：蓝色胶带 -->
+        <div class="decor-tape tape-blue"></div>
+        <!-- 装饰：叶子 -->
+        <svg class="doodle-leaf" viewBox="0 0 24 24"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22l1-2.3A4.49,4.49 0 0,0 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+
         <div class="card-header-label">成品清单</div>
         <div class="section-title">Step 01: Final Goods</div>
         <div class="scroll-list" id="directList"></div>
@@ -149,11 +301,17 @@
 
 <div class="col-wrapper right-col">
     <div class="big-card">
+        <!-- 装饰：绿色胶带 -->
+        <div class="decor-tape tape-green"></div>
+
         <div class="card-header-label">中间件清单</div>
         <div class="section-title">Step 02: Intermediate</div>
         <div class="scroll-list" id="subList"></div>
     </div>
     <div class="big-card crystal-card">
+        <!-- 装饰：粉色胶带 -->
+        <div class="decor-tape tape-pink"></div>
+        
         <div class="card-header-label">
             <span>水晶消耗</span>
             <label class="mini-toggle">
@@ -168,6 +326,9 @@
 
 <div class="col-wrapper right-col">
     <div class="big-card">
+        <!-- 装饰：蓝色胶带 -->
+        <div class="decor-tape tape-blue"></div>
+
         <div class="card-header-label">基础素材清单</div>
         <div class="section-title">Step 03: Raw Materials</div>
         <div class="scroll-list" id="rawList"></div>
