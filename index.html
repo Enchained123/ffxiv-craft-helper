@@ -30,22 +30,30 @@
             background-color: var(--bg-body); color: var(--text-main);
             margin: 0; height: 100vh; display: grid; grid-template-columns: 310px repeat(3, 1fr);
             overflow: hidden; 
-            /* 背景网格稍微调整，更有信纸感 */
             background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
                               linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
             background-size: 25px 25px;
-            position: relative; /* 为绝对定位的装饰物提供基准 */
+            position: relative; 
+        }
+
+        /* 全局移除数字输入框的上下箭头 (Spinners) */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
         }
 
         /* --- 侧边栏 --- */
         aside { 
             padding: 24px; display: flex; flex-direction: column; gap: 20px; 
             height: 100vh; border-right: 1px solid var(--divider); background: #F2F0E9;
-            position: relative; z-index: 2; /* 保证侧边栏在装饰物之上 */
+            position: relative; z-index: 2; 
         }
         .brand { font-size: 15px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid var(--text-dark); padding-bottom: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; position: relative;}
         
-        /* 搜索栏样式微调 */
         .search-bar-box { background: var(--surface); border: 1px solid #D1CFCA; display: flex; align-items: center; padding: 8px 12px; position: relative; border-radius: 2px; }
         .search-bar-box input { border: none; background: transparent; outline: none; font-size: 13px; width: 100%; }
         
@@ -53,7 +61,6 @@
         .dropdown-item { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--divider); }
         .dropdown-item:hover { background: #F9F8F5; }
 
-        /* 卡片基础样式 - 增加相对定位以便贴胶带 */
         .sidebar-card, .big-card { 
             position: relative; 
             background: var(--surface); 
@@ -66,7 +73,6 @@
 
         .scroll-list { flex: 1; overflow-y: auto; padding: 0 15px; z-index: 1; position: relative; }
         
-        /* --- 列表项交互 --- */
         .list-item { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 12px 0; border-bottom: 1px solid var(--divider); 
@@ -74,7 +80,6 @@
             background: white; user-select: none;
         }
         .list-item:hover { background: #FCFBFA; }
-        .list-item:active { transform: scale(0.995); }
 
         .checkbox-wrapper { margin-right: 12px; display: flex; align-items: center; cursor: pointer; padding: 2px; }
         .custom-checkbox {
@@ -86,30 +91,25 @@
         
         .item-name-text { flex: 1; padding-right: 8px; cursor: pointer; line-height: 1.4; }
         
-        /* 状态样式 */
         .is-done { opacity: 0.3; }
         .is-done .item-name-text { text-decoration: line-through; }
         .is-done .custom-checkbox { background: var(--primary); border-color: var(--primary); }
         .is-done .custom-checkbox i { display: block; }
         .is-done .minimal-input { visibility: hidden; }
 
-        /* 快速导入 */
         .import-box-inner { padding: 15px; border-top: 1px solid var(--divider); display: flex; flex-direction: column; gap: 8px; background: #FAF9F6; }
         .inner-select { border: 1px solid #D1CFCA; padding: 6px; font-size: 12px; outline: none; width: 100%; background: white; }
         .inner-btn { background: #4A4A4A; color: #fff; border: none; padding: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 2px; }
 
-        /* 右侧布局 */
         .col-wrapper { padding: 20px 10px; display: flex; flex-direction: column; height: 100vh; position: relative; visibility: hidden; opacity: 0; transition: 0.3s; z-index: 2; }
         .col-wrapper.active { visibility: visible; opacity: 1; }
         
         .big-card { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-        /* 移除原来的伪元素装饰，改用手账风装饰 */
-        /* .big-card::after { ... } */
-
         .section-title { font-size: 10px; font-weight: 700; padding: 6px 15px; border-bottom: 1px solid var(--divider); color: var(--text-sub); background: #FDFDFB; text-transform: uppercase; }
         
         .qty-group { display: flex; align-items: center; gap: 4px; }
-        .minimal-input { width: 40px; border: none; text-align: right; font-size: 13px; font-weight: 600; outline: none; background: #F9F8F5; border-radius: 4px; padding: 2px; }
+        /* 修改：文字对齐调整为居中 */
+        .minimal-input { width: 40px; border: none; text-align: center; font-size: 13px; font-weight: 600; outline: none; background: #F9F8F5; border-radius: 4px; padding: 2px; }
         .target-qty-right { font-weight: 700; min-width: 25px; text-align: right; color: var(--text-dark); }
         
         .crystal-card { flex: 0 0 auto; height: 35%; margin-top: 15px; }
@@ -126,132 +126,37 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #E0DDD5; }
 
-        /* ========================================= */
-        /* === 手账风格装饰 CSS (Journal Styles) === */
-        /* ========================================= */
-
-        /* 1. 和纸胶带 (Washi Tape) */
-        /* 胶带公共样式 */
+        /* --- 手账风装饰 --- */
         .decor-tape {
-            position: absolute;
-            height: 28px;
-            width: 100px;
-            left: 50%;
-            top: -12px;
-            transform: translateX(-50%) rotate(-2deg);
-            background-color: var(--tape-color-1);
-            opacity: 0.85;
-            z-index: 10;
-            pointer-events: none; /* 关键：让鼠标可以穿透 */
+            position: absolute; height: 28px; width: 100px; left: 50%; top: -12px; transform: translateX(-50%) rotate(-2deg);
+            background-color: var(--tape-color-1); opacity: 0.85; z-index: 10; pointer-events: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            /* 制作锯齿边缘 */
-            clip-path: polygon(
-                2% 0%, 98% 0%, 100% 10%, 98% 20%, 100% 30%, 98% 40%, 100% 50%, 98% 60%, 100% 70%, 98% 80%, 100% 90%, 98% 100%,
-                2% 100%, 0% 90%, 2% 80%, 0% 70%, 2% 60%, 0% 50%, 2% 40%, 0% 30%, 2% 20%, 0% 10%
-            );
+            clip-path: polygon(2% 0%, 98% 0%, 100% 10%, 98% 20%, 100% 30%, 98% 40%, 100% 50%, 98% 60%, 100% 70%, 98% 80%, 100% 90%, 98% 100%, 2% 100%, 0% 90%, 2% 80%, 0% 70%, 2% 60%, 0% 50%, 2% 40%, 0% 30%, 2% 20%, 0% 10%);
         }
-
-        /* 不同位置的胶带变体 */
         .tape-pink { background: var(--tape-color-1); transform: translateX(-50%) rotate(-1.5deg); }
         .tape-blue { background: var(--tape-color-2); transform: translateX(-50%) rotate(1deg); width: 90px;}
         .tape-green { background: var(--tape-color-3); transform: translateX(-50%) rotate(-0.5deg); width: 110px;}
         
-        /* 2. 手绘 SVG 图标 (Stickers) */
-        .sticker {
-            position: absolute;
-            pointer-events: none;
-            z-index: 15;
-            opacity: 0.9;
-        }
-
-        /* 侧边栏的猫爪 */
-        .sticker-paw {
-            bottom: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            fill: #D3C0B0;
-            opacity: 0.4;
-            transform: rotate(15deg);
-        }
-
-        /* 标题旁边的星星 */
-        .sticker-star {
-            top: 22px;
-            right: 20px;
-            width: 20px;
-            height: 20px;
-            fill: #E6B422;
-        }
-
-        /* 背景的大咖啡渍 */
-        .bg-stain {
-            position: fixed;
-            bottom: -50px;
-            right: -50px;
-            width: 300px;
-            height: 300px;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.08;
-            fill: #5C4033;
-        }
-
-        /* 回形针 (Paperclip) - 纯 CSS 模拟 */
-        .paperclip {
-            position: absolute;
-            top: -10px;
-            right: 20px;
-            width: 14px;
-            height: 45px;
-            border: 3px solid #777;
-            border-radius: 10px;
-            z-index: 20;
-            opacity: 0.6;
-            pointer-events: none;
-            border-bottom: none;
-        }
-        .paperclip::after {
-            content: "";
-            position: absolute;
-            top: 10px;
-            right: -3px;
-            width: 14px;
-            height: 25px;
-            border: 3px solid #777;
-            border-radius: 10px;
-            border-top: none;
-        }
-
-        /* 小涂鸦：叶子 */
-        .doodle-leaf {
-            position: absolute;
-            top: -15px;
-            left: -10px;
-            width: 30px;
-            height: 30px;
-            fill: #8FBC8F;
-            z-index: 20;
-            pointer-events: none;
-        }
-
+        .sticker { position: absolute; pointer-events: none; z-index: 15; opacity: 0.9; }
+        .sticker-paw { bottom: 20px; right: 20px; width: 40px; height: 40px; fill: #D3C0B0; opacity: 0.4; transform: rotate(15deg); }
+        .sticker-star { top: 22px; right: 20px; width: 20px; height: 20px; fill: #E6B422; }
+        .bg-stain { position: fixed; bottom: -50px; right: -50px; width: 300px; height: 300px; pointer-events: none; z-index: 0; opacity: 0.08; fill: #5C4033; }
+        .paperclip { position: absolute; top: -10px; right: 20px; width: 14px; height: 45px; border: 3px solid #777; border-radius: 10px; z-index: 20; opacity: 0.6; pointer-events: none; border-bottom: none; }
+        .paperclip::after { content: ""; position: absolute; top: 10px; right: -3px; width: 14px; height: 25px; border: 3px solid #777; border-radius: 10px; border-top: none; }
+        .doodle-leaf { position: absolute; top: -15px; left: -10px; width: 30px; height: 30px; fill: #8FBC8F; z-index: 20; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<!-- 背景装饰：咖啡渍 -->
 <svg class="bg-stain" viewBox="0 0 200 200">
     <path d="M100,10 C50,10 10,50 10,100 C10,150 50,190 100,190 C150,190 190,150 190,100 C190,50 150,10 100,10 M100,20 C145,20 180,55 180,100 C180,145 145,180 100,180 C55,180 20,145 20,100 C20,55 55,20 100,20" />
 </svg>
 
 <aside>
-    <!-- 装饰：侧边栏卡子 -->
     <div class="paperclip"></div>
-
     <div class="brand">
         <i class="material-icons-round" style="font-size:18px; color:var(--primary);">auto_awesome</i>
         <span>FFXIV Craft Helper</span>
-        <!-- 装饰：标题星星 -->
         <svg class="sticker sticker-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
     </div>
     
@@ -262,15 +167,12 @@
     </div>
 
     <div class="sidebar-card">
-        <!-- 装饰：粉色胶带 -->
         <div class="decor-tape tape-pink"></div>
-        
         <div class="card-header-label">
             <span>当前计划</span>
             <span style="cursor:pointer; font-weight: normal; font-size:10px; text-decoration: underline;" onclick="clearCart()">RESET</span>
         </div>
         <div class="scroll-list" id="cartList"></div>
-        
         <div class="import-box-inner">
             <select id="catSelect" class="inner-select" onchange="handleCategoryChange()">
                 <option value="">-- 分类 --</option>
@@ -280,19 +182,14 @@
             </select>
             <button class="inner-btn" onclick="addSelectedSet()">添加套装</button>
         </div>
-
-        <!-- 装饰：底部猫爪 -->
         <svg class="sticker sticker-paw" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9c.83 0 1.5-.67 1.5-1.5S7.83 8 7 8s-1.5.67-1.5 1.5S6.17 11 7 11zm3.5-3c.83 0 1.5-.67 1.5-1.5S11.33 5 10.5 5 9 5.67 9 6.5s.67 1.5 1.5 1.5zm3.5 0c.83 0 1.5-.67 1.5-1.5S14.83 5 14 5s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm3.5 3c.83 0 1.5-.67 1.5-1.5S18.33 8 17.5 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/></svg>
     </div>
 </aside>
 
 <div class="col-wrapper right-col">
     <div class="big-card">
-        <!-- 装饰：蓝色胶带 -->
         <div class="decor-tape tape-blue"></div>
-        <!-- 装饰：叶子 -->
         <svg class="doodle-leaf" viewBox="0 0 24 24"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22l1-2.3A4.49,4.49 0 0,0 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
-
         <div class="card-header-label">成品清单</div>
         <div class="section-title">Step 01: Final Goods</div>
         <div class="scroll-list" id="directList"></div>
@@ -301,17 +198,13 @@
 
 <div class="col-wrapper right-col">
     <div class="big-card">
-        <!-- 装饰：绿色胶带 -->
         <div class="decor-tape tape-green"></div>
-
         <div class="card-header-label">中间件清单</div>
         <div class="section-title">Step 02: Intermediate</div>
         <div class="scroll-list" id="subList"></div>
     </div>
     <div class="big-card crystal-card">
-        <!-- 装饰：粉色胶带 -->
         <div class="decor-tape tape-pink"></div>
-        
         <div class="card-header-label">
             <span>水晶消耗</span>
             <label class="mini-toggle">
@@ -326,9 +219,7 @@
 
 <div class="col-wrapper right-col">
     <div class="big-card">
-        <!-- 装饰：蓝色胶带 -->
         <div class="decor-tape tape-blue"></div>
-
         <div class="card-header-label">基础素材清单</div>
         <div class="section-title">Step 03: Raw Materials</div>
         <div class="scroll-list" id="rawList"></div>
@@ -343,34 +234,15 @@
     const crystalKeywords = ['之碎晶', '之水晶', '之晶簇', 'Shard', 'Crystal', 'Cluster'];
     const isCrystal = (n) => crystalKeywords.some(k => n.includes(k));
 
-    // --- 数据持久化核心函数 ---
-    function saveAllData() {
-        localStorage.setItem('ffxiv_craft_cart', JSON.stringify(cart));
-        localStorage.setItem('ffxiv_craft_inventory', JSON.stringify(inventory));
-    }
-
-    function saveConfig() {
-        localStorage.setItem('ffxiv_craft_ignore_crystals', document.getElementById('crystalIgnoreToggle').checked);
-    }
-
+    function saveAllData() { localStorage.setItem('ffxiv_craft_cart', JSON.stringify(cart)); localStorage.setItem('ffxiv_craft_inventory', JSON.stringify(inventory)); }
+    function saveConfig() { localStorage.setItem('ffxiv_craft_ignore_crystals', document.getElementById('crystalIgnoreToggle').checked); }
     function loadAllData() {
-        const savedCart = localStorage.getItem('ffxiv_craft_cart');
-        const savedInv = localStorage.getItem('ffxiv_craft_inventory');
-        const savedIgnore = localStorage.getItem('ffxiv_craft_ignore_crystals');
-
-        if (savedCart) cart = JSON.parse(savedCart);
-        if (savedInv) inventory = JSON.parse(savedInv);
-        if (savedIgnore !== null) {
-            document.getElementById('crystalIgnoreToggle').checked = (savedIgnore === 'true');
-        }
+        const savedCart = localStorage.getItem('ffxiv_craft_cart'), savedInv = localStorage.getItem('ffxiv_craft_inventory'), savedIgnore = localStorage.getItem('ffxiv_craft_ignore_crystals');
+        if (savedCart) cart = JSON.parse(savedCart); if (savedInv) inventory = JSON.parse(savedInv); if (savedIgnore !== null) document.getElementById('crystalIgnoreToggle').checked = (savedIgnore === 'true');
     }
 
-    // 双击复制
-    async function copyName(name) {
-        try { await navigator.clipboard.writeText(name); } catch (err) { console.error('无法复制', err); }
-    }
+    async function copyName(name) { try { await navigator.clipboard.writeText(name); } catch (err) { console.error('无法复制', err); } }
 
-    // 初始化加载
     Promise.all([
         fetch('recipes.json').then(r => r.json()).catch(() => []),
         fetch('gear_sets.json').then(r => r.json()).catch(() => []),
@@ -378,69 +250,39 @@
     ]).then(([recipes, sets, currencies]) => {
         allRecipes = recipes; gearSets = sets; currencyMap = currencies;
         recipes.forEach(r => { recipeMap[String(r.result_id)] = r; recipeMap[r.name.trim()] = r; });
-        
-        loadAllData(); // 读取本地缓存
-        initCategorySelect();
-        renderCart();
-        calculateAll();
+        loadAllData(); initCategorySelect(); renderCart(); calculateAll();
     });
 
     function calculateAll() {
         const totalDirect = {}, totalSub = {}, totalRaw = {}, totalCrystals = {}, totalCurrency = {};
-        const ignoreCrystals = document.getElementById('crystalIgnoreToggle').checked;
-        const rightCols = document.querySelectorAll('.right-col');
-        
-        if (cart.length > 0) rightCols.forEach(el => el.classList.add('active'));
-        else rightCols.forEach(el => el.classList.remove('active'));
+        const ignoreCrystals = document.getElementById('crystalIgnoreToggle').checked, rightCols = document.querySelectorAll('.right-col');
+        if (cart.length > 0) rightCols.forEach(el => el.classList.add('active')); else rightCols.forEach(el => el.classList.remove('active'));
 
         cart.forEach(cartItem => {
-            const recipe = recipeMap[String(cartItem.result_id)];
-            if (!recipe) return;
+            const recipe = recipeMap[String(cartItem.result_id)]; if (!recipe) return;
             const crafts = Math.ceil(cartItem.amount / recipe.amount);
             recipe.ingredients.forEach(ing => {
                 if (isCrystal(ing.name)) totalCrystals[ing.name] = (totalCrystals[ing.name] || 0) + (ing.amount * crafts);
-                else { 
-                    if (!totalDirect[ing.name]) totalDirect[ing.name] = { amount: 0, id: ing.id }; 
-                    totalDirect[ing.name].amount += (ing.amount * crafts); 
-                }
+                else { if (!totalDirect[ing.name]) totalDirect[ing.name] = { amount: 0, id: ing.id }; totalDirect[ing.name].amount += (ing.amount * crafts); }
             });
         });
 
         for (let name in totalDirect) {
-            const item = totalDirect[name], owned = inventory[name.trim()] || 0, remaining = Math.max(0, item.amount - owned);
-            const subRecipe = recipeMap[String(item.id)];
-            if (subRecipe && remaining > 0) {
-                const crafts = Math.ceil(remaining / subRecipe.amount);
-                subRecipe.ingredients.forEach(ing => solveChainRecursive(ing.id, ing.amount * crafts, totalSub, totalRaw, totalCrystals, ing.name));
-            } else if (!subRecipe && remaining > 0) {
-                if (!totalRaw[name]) totalRaw[name] = { amount: 0, id: item.id };
-                totalRaw[name].amount += remaining;
-            }
+            const item = totalDirect[name], owned = inventory[name.trim()] || 0, remaining = Math.max(0, item.amount - owned), subRecipe = recipeMap[String(item.id)];
+            if (subRecipe && remaining > 0) { const crafts = Math.ceil(remaining / subRecipe.amount); subRecipe.ingredients.forEach(ing => solveChainRecursive(ing.id, ing.amount * crafts, totalSub, totalRaw, totalCrystals, ing.name)); }
+            else if (!subRecipe && remaining > 0) { if (!totalRaw[name]) totalRaw[name] = { amount: 0, id: item.id }; totalRaw[name].amount += remaining; }
         }
 
-        for (let name in totalRaw) {
-            const cn = name.trim();
-            if (currencyMap[cn]) totalCurrency[currencyMap[cn].name] = (totalCurrency[currencyMap[cn].name] || 0) + (currencyMap[cn].price * totalRaw[name].amount);
-        }
-
-        renderList('directList', totalDirect);
-        renderList('subList', totalSub);
-        renderList('rawList', totalRaw);
-        renderCrystalList(totalCrystals, ignoreCrystals);
-        renderCurrencyFooter(totalCurrency);
+        for (let name in totalRaw) { const cn = name.trim(); if (currencyMap[cn]) totalCurrency[currencyMap[cn].name] = (totalCurrency[currencyMap[cn].name] || 0) + (currencyMap[cn].price * totalRaw[name].amount); }
+        renderList('directList', totalDirect); renderList('subList', totalSub); renderList('rawList', totalRaw); renderCrystalList(totalCrystals, ignoreCrystals); renderCurrencyFooter(totalCurrency);
     }
 
     function solveChainRecursive(itemId, need, subMap, rawMap, cryMap, itemName) {
         if (isCrystal(itemName)) { cryMap[itemName] = (cryMap[itemName] || 0) + need; return; }
         const owned = inventory[itemName.trim()] || 0, recipe = recipeMap[String(itemId)];
         if (recipe) {
-            if(!subMap[itemName]) subMap[itemName] = { amount: 0, id: itemId };
-            subMap[itemName].amount += need;
-            const netNeed = Math.max(0, need - owned);
-            if (netNeed > 0) {
-                const crafts = Math.ceil(netNeed / recipe.amount);
-                recipe.ingredients.forEach(ing => solveChainRecursive(ing.id, ing.amount * crafts, subMap, rawMap, cryMap, ing.name));
-            }
+            if(!subMap[itemName]) subMap[itemName] = { amount: 0, id: itemId }; subMap[itemName].amount += need;
+            const netNeed = Math.max(0, need - owned); if (netNeed > 0) { const crafts = Math.ceil(netNeed / recipe.amount); recipe.ingredients.forEach(ing => solveChainRecursive(ing.id, ing.amount * crafts, subMap, rawMap, cryMap, ing.name)); }
         } else { if(!rawMap[itemName]) rawMap[itemName] = { amount: 0, id: itemId }; rawMap[itemName].amount += need; }
     }
 
@@ -448,29 +290,18 @@
         const container = document.getElementById(id); container.innerHTML = '';
         Object.keys(data).sort((a,b) => ((inventory[a.trim()]||0) >= data[a].amount) - ((inventory[b.trim()]||0) >= data[b].amount)).forEach(name => {
             const needed = data[name].amount, owned = inventory[name.trim()] || 0, isDone = owned >= needed;
-            const cur = currencyMap[name.trim()];
-            const curTag = cur ? `<div class="tag-currency">${cur.price} ${cur.name}</div>` : '';
-
-            const itemEl = document.createElement('div');
-            itemEl.className = `list-item ${isDone ? 'is-done' : ''}`;
-            itemEl.ondblclick = () => copyName(name);
-
+            const cur = currencyMap[name.trim()], curTag = cur ? `<div class="tag-currency">${cur.price} ${cur.name}</div>` : '';
+            const itemEl = document.createElement('div'); itemEl.className = `list-item ${isDone ? 'is-done' : ''}`; itemEl.ondblclick = () => copyName(name);
             itemEl.innerHTML = `
                 <div class="checkbox-wrapper" onclick="event.stopPropagation(); updateInv('${name}', ${isDone ? 0 : needed})">
                     <div class="custom-checkbox"><i class="material-icons-round">done</i></div>
                 </div>
-                <div class="item-name-text">
-                    <div style="font-weight:500">${name}</div>
-                    ${curTag}
-                </div>
+                <div class="item-name-text"><div style="font-weight:500">${name}</div>${curTag}</div>
                 <div class="qty-group">
-                    <input type="number" class="minimal-input" value="${owned}" 
-                        onclick="event.stopPropagation()" onfocus="this.select()"
-                        onchange="updateInv('${name}', this.value)">
+                    <input type="number" class="minimal-input" value="${owned}" onclick="event.stopPropagation()" onfocus="this.select()" onchange="updateInv('${name}', this.value)">
                     <span style="color:#CCC; font-size:11px;">/</span>
                     <span class="target-qty-right">${needed}</span>
-                </div>
-            `;
+                </div>`;
             container.appendChild(itemEl);
         });
     }
@@ -479,32 +310,22 @@
         const container = document.getElementById('crystalList'); container.innerHTML = '';
         Object.keys(data).sort((a,b) => ((inventory[a.trim()]||0) >= data[a]) - ((inventory[b.trim()]||0) >= data[b])).forEach(name => {
             const needed = data[name], owned = inventory[name.trim()] || 0, isDone = ignore || (owned >= needed);
-            const itemEl = document.createElement('div');
-            itemEl.className = `list-item ${isDone ? 'is-done' : ''}`;
-            itemEl.ondblclick = () => copyName(name);
-
+            const itemEl = document.createElement('div'); itemEl.className = `list-item ${isDone ? 'is-done' : ''}`; itemEl.ondblclick = () => copyName(name);
             itemEl.innerHTML = `
                 <div class="checkbox-wrapper" onclick="event.stopPropagation(); updateInv('${name}', ${isDone && !ignore ? 0 : needed})">
                     <div class="custom-checkbox"><i class="material-icons-round">bolt</i></div>
                 </div>
                 <span class="item-name-text">${name}</span>
                 <div class="qty-group">
-                    <input type="number" class="minimal-input" value="${owned}" 
-                        onclick="event.stopPropagation()" onfocus="this.select()"
-                        onchange="updateInv('${name}', this.value)">
+                    <input type="number" class="minimal-input" value="${owned}" onclick="event.stopPropagation()" onfocus="this.select()" onchange="updateInv('${name}', this.value)">
                     <span style="color:#CCC; font-size:11px;">/</span>
                     <span class="target-qty-right">${needed}</span>
-                </div>
-            `;
+                </div>`;
             container.appendChild(itemEl);
         });
     }
 
-    function updateInv(name, val) { 
-        inventory[name.trim()] = Math.max(0, parseInt(val) || 0); 
-        saveAllData(); // 保存修改
-        calculateAll(); 
-    }
+    function updateInv(name, val) { inventory[name.trim()] = Math.max(0, parseInt(val) || 0); saveAllData(); calculateAll(); }
     
     function renderCart() {
         const c = document.getElementById('cartList'); c.innerHTML = '';
@@ -512,33 +333,24 @@
         cart.forEach((item, i) => {
             const r = recipeMap[String(item.result_id)];
             const div = document.createElement('div'); div.className = 'list-item'; div.style.padding = "8px 0";
+            // 修改：将 <b> 替换为隐藏边框的输入框，保持原始字体大小和粗细
             div.innerHTML = `<div style="font-size:12px; flex:1;">${r.name}</div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="cursor:pointer" onclick="updateCart(${i},-1)">-</span>
-                    <b style="min-width:15px; text-align:center;">${item.amount}</b>
+                    <input type="number" value="${item.amount}" 
+                        style="width:30px; border:none; background:transparent; font-weight:700; text-align:center; outline:none; font-family:inherit; font-size:13px; color:var(--text-dark);" 
+                        onfocus="this.select()"
+                        onchange="setCartAmount(${i}, this.value)">
                     <span style="cursor:pointer" onclick="updateCart(${i},1)">+</span>
                 </div>`;
             c.appendChild(div);
         });
     }
 
-    function updateCart(i, d) { 
-        cart[i].amount += d; 
-        if(cart[i].amount <=0) cart.splice(i,1); 
-        saveAllData(); // 保存修改
-        calculateAll(); 
-        renderCart(); 
-    }
+    function updateCart(i, d) { cart[i].amount += d; if(cart[i].amount <=0) cart.splice(i,1); saveAllData(); calculateAll(); renderCart(); }
+    function setCartAmount(i, val) { let v = parseInt(val) || 0; if(v <= 0) cart.splice(i, 1); else cart[i].amount = v; saveAllData(); calculateAll(); renderCart(); }
 
-    function clearCart() { 
-        if(confirm("确定清空计划和所有进度？")) { 
-            cart = []; 
-            inventory = {}; 
-            localStorage.clear(); // 清除本地缓存
-            calculateAll(); 
-            renderCart(); 
-        } 
-    }
+    function clearCart() { if(confirm("确定清空计划和所有进度？")) { cart = []; inventory = {}; localStorage.clear(); calculateAll(); renderCart(); } }
 
     function renderCurrencyFooter(data) {
         const f = document.getElementById('currencyFooter'), l = document.getElementById('currencyList');
@@ -552,39 +364,23 @@
         if(!v) { d.style.display='none'; return; }
         allRecipes.filter(r => r.name.includes(v)).slice(0,10).forEach(r => {
             const div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = r.name;
-            div.onclick = () => { 
-                const exist = cart.find(i => i.result_id === r.result_id); 
-                if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); 
-                saveAllData(); // 保存修改
-                d.style.display='none'; this.value=''; calculateAll(); renderCart(); 
-            };
+            div.onclick = () => { const exist = cart.find(i => i.result_id === r.result_id); if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); saveAllData(); d.style.display='none'; this.value=''; calculateAll(); renderCart(); };
             d.appendChild(div);
         });
         d.style.display='block';
     }
 
-    function initCategorySelect() { 
-        const catS = document.getElementById('catSelect');
-        gearSets.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.text = c.category; catS.add(o); }); 
-    }
-
+    function initCategorySelect() { const catS = document.getElementById('catSelect'); gearSets.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.text = c.category; catS.add(o); }); }
     function handleCategoryChange() {
         const idx = document.getElementById('catSelect').value, s = document.getElementById('setSelect');
-        s.innerHTML = '<option value="">-- 选择职业 --</option>';
-        if (idx==="") { s.disabled=true; return; }
-        gearSets[idx].sets.forEach((set, i) => { const o = document.createElement('option'); o.value = `${idx}-${i}`; o.text = set.name; s.add(o); });
-        s.disabled = false;
+        s.innerHTML = '<option value="">-- 选择职业 --</option>'; if (idx==="") { s.disabled=true; return; }
+        gearSets[idx].sets.forEach((set, i) => { const o = document.createElement('option'); o.value = `${idx}-${i}`; o.text = set.name; s.add(o); }); s.disabled = false;
     }
-
     function addSelectedSet() {
         const v = document.getElementById('setSelect').value; if (!v) return;
         const [c, s] = v.split('-').map(Number);
-        gearSets[c].sets[s].items.forEach(name => {
-            const r = allRecipes.find(rec => rec.name.trim() === name.trim());
-            if (r) { const exist = cart.find(i => i.result_id === r.result_id); if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); }
-        });
-        saveAllData(); // 保存修改
-        calculateAll(); renderCart();
+        gearSets[c].sets[s].items.forEach(name => { const r = allRecipes.find(rec => rec.name.trim() === name.trim()); if (r) { const exist = cart.find(i => i.result_id === r.result_id); if (exist) exist.amount++; else cart.push({ result_id: r.result_id, amount: 1 }); } });
+        saveAllData(); calculateAll(); renderCart();
     }
 </script>
 </body>
